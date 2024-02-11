@@ -1,0 +1,10 @@
+# Default
+/.*/
+
+# Python
+__pycache__
+.coverage*
+.python-version
+*.egg-info
+coverage*
+htmlcov
