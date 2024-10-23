@@ -4,12 +4,12 @@ import socket
 import struct
 from typing import TYPE_CHECKING
 
-import peary
+from peary.peary_client_interface import PearyClientInterface
+from peary.peary_device import PearyDevice
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-    from peary.peary_device import PearyDevice
 
 # TODO(Jeff): Clean up this file and reference it from the CERN repo
 PEARY_PROTOCOL_VERSION = b"1"
@@ -41,7 +41,7 @@ class FailureError(Exception):
         super().__init__(msg)
 
 
-class PearyClient:
+class PearyClient(PearyClientInterface):
     """Connect to a pearyd instance running somewhere else.
 
     The peary client supports the context manager protocol and should be
@@ -160,9 +160,7 @@ class PearyClient:
         """Get the device object corresponding to the given index."""
         device = self._devices.get(index)
         if not device:
-            device = self._devices.setdefault(
-                index, peary.peary_device.PearyDevice(self, index)
-            )
+            device = self._devices.setdefault(index, PearyDevice(self, index))
         return device
 
     def add_device(
