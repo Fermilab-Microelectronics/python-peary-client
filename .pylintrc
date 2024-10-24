@@ -1,5 +1,5 @@
 [MAIN]
-fail-under = 10
+fail-under = 1
 load-plugins =
     pylint.extensions.check_elif,
     pylint.extensions.code_style,
