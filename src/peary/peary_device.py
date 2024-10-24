@@ -3,32 +3,29 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from peary.peary_client_interface import PearyClientInterface
+    from peary.peary_proxy_interface import PearyProxyInterface
 
 
 # TODO(Jeff): Clean up this file and reference it from the CERN repo
 class PearyDevice:
-    """A Peary device.
+    """A Peary device."""
 
-    This object acts as a proxy that forwards all function calls to the
-    device specified by the device index using the client object.
-    """
-
-    def __init__(self, client: PearyClientInterface, index: int) -> None:
+    def __init__(self, proxy: PearyProxyInterface, index: int) -> None:
         """Initializes a remote peary device.
 
         Args:
-            client: Peary client used to connect to the remote peary server.
+            proxy: Proxy used to communicate with the remote device.
             index: Numerical identifier for the device.
 
         """
-        self._client = client
+        self.proxy = proxy
         self.index = index
+
+        # TODO(Jeff): This secret suffixes are annoying, comment out for now
+
         # internal name is actualy <name>Device, but we only use <name>
         # to generate it. remove the suffix for consistency
         self.device_type = self._run_command("name").decode("utf-8")
-
-        # TODO(Jeff): This secret suffixes are annoying, comment out for now
         # sss if self.device_type.endswith("Device"):
         # sss    self.device_type = self.device_type[:-6]
 
@@ -41,7 +38,7 @@ class PearyDevice:
         """
         return f"{self.device_type}_Device({self.index})"
 
-    def _client_request(self, cmd: str, *args: str) -> bytes:
+    def request(self, cmd: str, *args: str) -> bytes:
         """Send a per-device request to the host and returns response payload.
 
         Args:
@@ -52,7 +49,7 @@ class PearyDevice:
             bytes: Client response.
 
         """
-        return self._client.request(f"device.{cmd}", str(self.index), *args)
+        return self.proxy.request(f"device.{cmd}", str(self.index), *args)
 
     def _run_command(self, cmd: str, *args: str) -> bytes:
         """Run a device command.
@@ -65,15 +62,15 @@ class PearyDevice:
             bytes: Command response.
 
         """
-        return self._client_request(cmd, *args)
+        return self.request(cmd, *args)
 
     def _run_setter(self, cmd: str, key: str, value: str) -> bytes:
         """Request a nullary operation from the device."""
-        return self._client_request(cmd, key, value)
+        return self.request(cmd, key, value)
 
     def _run_getter(self, cmd: str, key: str) -> bytes:
         """Request a nullary operation from the device."""
-        return self._client_request(cmd, key)
+        return self.request(cmd, key)
 
     # fixed device functionality is added explicitely with
     # additional return value decoding where appropriate
