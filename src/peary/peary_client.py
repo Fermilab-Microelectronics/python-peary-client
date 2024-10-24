@@ -53,16 +53,12 @@ class PearyClient:
         self.socket.connect((self.host, self.port))
         return self.proxy_class(self.socket)
 
-    def __exit__(self, *_: object) -> bool:
+    def __exit__(self, *_: object) -> None:
         """Exits a context block.
 
         Args:
             _: Catches the usued arguments required for the __exit__ function.
 
-        Returns:
-            bool: Exceptions are not handled so always returns true.
-
         """
         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
-        return True
