@@ -2,32 +2,34 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from peary.peary_protocol import PearyProtocol
+
 if TYPE_CHECKING:
-    from peary.peary_proxy_interface import PearyProxyInterface
+    from socket import socket as socket_type
+
+    from peary.peary_protocol_interface import PearyProtocolInterface
 
 
-# TODO(Jeff): Clean up this file and reference it from the CERN repo
 class PearyDevice:
     """A Peary device."""
 
-    def __init__(self, proxy: PearyProxyInterface, index: int) -> None:
+    def __init__(
+        self,
+        index: int,
+        socket: socket_type,
+        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
+    ) -> None:
         """Initializes a remote peary device.
 
         Args:
-            proxy: Proxy used to communicate with the remote device.
+            socket: Socket connected to the remote peary server.
+            protocol_class: Protocol used during communication with the peary server.
             index: Numerical identifier for the device.
 
         """
-        self.proxy = proxy
-        self.index = index
-
-        # TODO(Jeff): This secret suffixes are annoying, comment out for now
-
-        # internal name is actualy <name>Device, but we only use <name>
-        # to generate it. remove the suffix for consistency
-        self.device_type = self._run_command("name").decode("utf-8")
-        # sss if self.device_type.endswith("Device"):
-        # sss    self.device_type = self.device_type[:-6]
+        self._protocol = protocol_class(socket)
+        self._index = index
+        self._name = self._request_name()
 
     def __repr__(self) -> str:
         """Returns a string representation for the device.
@@ -36,9 +38,19 @@ class PearyDevice:
             String: The string representation of the device instance.
 
         """
-        return f"{self.device_type}_Device({self.index})"
+        return f"{self.name}({self.index})"
 
-    def request(self, cmd: str, *args: str) -> bytes:
+    @property
+    def index(self) -> int:
+        """Returns the device index."""
+        return self._index
+
+    @property
+    def name(self) -> int:
+        """Returns the device type."""
+        return self._name
+
+    def _request(self, cmd: str, *args: str) -> bytes:
         """Send a per-device request to the host and returns response payload.
 
         Args:
@@ -46,106 +58,82 @@ class PearyDevice:
             args: Additional device command arguments sent to host.
 
         Returns:
-            bytes: Client response.
+            bytes: response payload.
 
         """
-        return self.proxy.request(f"device.{cmd}", str(self.index), *args)
+        return self._protocol.request(f"device.{cmd}", str(self.index), *args)
 
-    def _run_command(self, cmd: str, *args: str) -> bytes:
-        """Run a device command.
-
-        Args:
-            cmd: The device command to run.
-            args: Additional command arguments.
-
-        Returns:
-            bytes: Command response.
-
-        """
-        return self.request(cmd, *args)
-
-    def _run_setter(self, cmd: str, key: str, value: str) -> bytes:
-        """Request a nullary operation from the device."""
-        return self.request(cmd, key, value)
-
-    def _run_getter(self, cmd: str, key: str) -> bytes:
-        """Request a nullary operation from the device."""
-        return self.request(cmd, key)
+    def _request_name(self) -> bytes:
+        """Requests the name of the device."""
+        return self._request("name").decode("utf-8")
 
     # fixed device functionality is added explicitely with
     # additional return value decoding where appropriate
 
     def power_on(self) -> bytes:
         """Power on the device."""
-        return self._run_command("power_on")
+        return self._request("power_on")
 
     def power_off(self) -> bytes:
         """Power off the device."""
-        return self._run_command("power_off")
+        return self._request("power_off")
 
     def reset(self) -> bytes:
         """Reset the device."""
-        return self._run_command("reset")
+        return self._request("reset")
 
     def configure(self) -> bytes:
         """Initialize and configure the device."""
-        return self._run_command("configure")
+        return self._request("configure")
 
     def daq_start(self) -> bytes:
         """Start data aquisition for the device."""
-        return self._run_command("daq_start")
+        return self._request("daq_start")
 
     def daq_stop(self) -> bytes:
         """Stop data aquisition for the device."""
-        return self._run_command("daq_stop")
+        return self._request("daq_stop")
 
     def list_registers(self) -> list[str]:
         """List all available registers by name."""
-        return self._run_command("list_registers").decode("utf-8").split()
+        return self._request("list_registers").decode("utf-8").split()
 
     def get_register(self, name: str) -> int:
         """Get the value of a named register."""
-        return int(self._run_getter("get_register", name))
+        return int(self._request("get_register", name))
 
     def set_register(self, name: str, value: int) -> bytes:
         """Set the value of a named register."""
-        return self._run_setter("set_register", name, str(value))
+        return self._request("set_register", name, str(value))
 
     def get_memory(self, name: str) -> int:
         """Get the value of a named memory."""
-        return int(self._run_getter("get_memory", name))
+        return int(self._request("get_memory", name))
 
     def set_memory(self, name: str, value: int) -> bytes:
         """Set the value of a named memory."""
-        return self._run_setter("set_memory", name, str(value))
+        return self._request("set_memory", name, str(value))
 
     def get_current(self, name: str) -> float:
         """Get the measured current of a named periphery port."""
-        return float(self._run_getter("get_current", name))
+        return float(self._request("get_current", name))
 
     def set_current(self, name: str, value: float) -> bytes:
         """Set the current of a named periphery port."""
-        return self._run_setter("set_current", name, str(value))
+        return self._request("set_current", name, str(value))
 
     def get_voltage(self, name: str) -> float:
         """Get the measured voltage of a named periphery port."""
-        return float(self._run_getter("get_voltage", name))
+        return float(self._request("get_voltage", name))
 
     def set_voltage(self, name: str, value: float) -> bytes:
         """Set the voltage of a named periphery port."""
-        return self._run_setter("set_voltage", name, str(value))
+        return self._request("set_voltage", name, str(value))
 
     def switch_on(self, name: str) -> bytes:
         """Switch on a periphery port."""
-        return self._run_command("switch_on", name)
+        return self._request("switch_on", name)
 
     def switch_off(self, name: str) -> bytes:
         """Switch off a periphery port."""
-        return self._run_command("switch_off", name)
-
-    # unknown attributes are interpreted as dynamic functions
-    # and are forwarded as-is to the pearyd instance
-    # sss def __getattr__(self, name: str) -> bytes:
-    # sss    func = functools.partial(self._request, name)
-    # sss    self.__dict__[name] = func
-    # sss    return func
+        return self._request("switch_off", name)
