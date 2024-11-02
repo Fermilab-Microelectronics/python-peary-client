@@ -44,10 +44,6 @@ def lint(session):
         "--disable=missing-class-docstring",
         "--disable=missing-function-docstring",
         "--disable=missing-module-docstring",
-        "--disable=missing-param-doc",
-        "--disable=missing-return-doc",
-        "--disable=missing-return-type-doc",
-        "--disable=missing-yield-doc",
     )
     session.run("mypy", "src", "test")
 
