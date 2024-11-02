@@ -6,7 +6,7 @@ import pytest
 # TODO(Jeff): This is more than just a mock socket. This is a mock server.
 @pytest.fixture
 def mock_socket():
-    # pylint: disable=missing-type-doc
+    # pylint: disable=missing-type-doc, missing-param-doc
     class _MockSocket:
         """Mock socket class."""
 

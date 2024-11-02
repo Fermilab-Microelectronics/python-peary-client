@@ -27,8 +27,8 @@ class PearyDevice:
             index: Numerical identifier for the device.
 
         """
-        self._protocol = protocol_class(socket)
         self._index = index
+        self._protocol = protocol_class(socket)
         self._name = self._request_name()
 
     def __repr__(self) -> str:
@@ -46,7 +46,7 @@ class PearyDevice:
         return self._index
 
     @property
-    def name(self) -> int:
+    def name(self) -> str:
         """Returns the device type."""
         return self._name
 
@@ -63,7 +63,7 @@ class PearyDevice:
         """
         return self._protocol.request(f"device.{cmd}", str(self.index), *args)
 
-    def _request_name(self) -> bytes:
+    def _request_name(self) -> str:
         """Requests the name of the device."""
         return self._request("name").decode("utf-8")
 

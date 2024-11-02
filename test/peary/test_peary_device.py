@@ -6,12 +6,13 @@ from peary.peary_device import PearyDevice
 from peary.peary_protocol_interface import PearyProtocolInterface
 
 
+# pylint: disable=missing-param-doc
 class MockProtocol(PearyProtocolInterface):
-    def __init__(self, socket: socket_type, timeout: int = 10) -> None:
-        pass
+    def __init__(self, socket: socket_type, timeout: int = 10):
+        """Mock __init__"""
 
-    def request(self, msg: str, *args: str, buffer_size: int = 4096) -> bytes:
-        pass
+    def request(self, msg: str, *args: str, buffer_size: int = 4096):
+        """Mock request"""
 
 
 @pytest.fixture(name="mock_peary_device_getter_method")

@@ -3,10 +3,13 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING
 
+from peary.peary_protocol import PearyProtocol
+
 if TYPE_CHECKING:
     from socket import socket as socket_type
 
     from peary.peary_device import PearyDevice
+    from peary.peary_protocol_interface import PearyProtocolInterface
 
 
 # TODO(Jeff): Getter should throw and exception if something is not found
@@ -24,17 +27,18 @@ class PearyProxyInterface(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __init__(self, socket: socket_type) -> None:
-        """Initializes a new peary client.
+    def __init__(
+        self,
+        socket: socket_type,
+        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
+    ) -> None:
+        """Initializes a new peary proxy.
 
         Args:
             socket: Socket connected to the remote peary server.
-        """
+            protocol_class: Protocol used during communication with the peary server.
 
-    # TODO(Jeff): This should be a private call
-    @abc.abstractmethod
-    def request(self, cmd: str, *args: str) -> bytes:
-        """Send a command to the host and return the reply payload."""
+        """
 
     @abc.abstractmethod
     def keep_alive(self) -> bytes:
@@ -53,11 +57,11 @@ class PearyProxyInterface(abc.ABC):
         """Get the device object corresponding to the given index."""
 
     @abc.abstractmethod
-    def add_device(self, device_type: str, *args: str) -> PearyDevice:
+    def add_device(self, name: str, *args: str) -> PearyDevice:
         """Add a new device of the given type."""
 
     @abc.abstractmethod
-    def ensure_device(self, device_type: str) -> PearyDevice:
+    def ensure_device(self, name: str) -> PearyDevice:
         """Ensure at least one device of the given type exists and return it.
 
         If there are multiple devices with the same name, the first one
