@@ -69,7 +69,7 @@ class PearyProxyInterface(abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_devices(self) -> bytes:
+    def clear_devices(self) -> None:
         """Clear and close all configured devices."""
 
     @abc.abstractmethod
@@ -77,5 +77,5 @@ class PearyProxyInterface(abc.ABC):
         """List all the added devices."""
 
     @abc.abstractmethod
-    def list_devices(self) -> bytes:
+    def list_remote_devices(self) -> bytes:
         """List devices known to the remote server."""

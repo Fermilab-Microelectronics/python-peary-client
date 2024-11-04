@@ -3,7 +3,32 @@ import struct
 
 import peary
 
-from .mock_proxy import MockProxy
+
+class MockProxy(peary.peary_proxy_interface.PearyProxyInterface):
+    """Mock proxy class."""
+
+    # pylint: disable-next=redefined-outer-name
+    def __init__(self, socket, **_):
+        """Mock intializer"""
+        self.socket = socket
+
+    def keep_alive(self):
+        """Mock keep alive."""
+
+    def add_device(self, *args):
+        """Add a new device of the given type."""
+
+    def get_device(self, *args):
+        """Mock get device."""
+
+    def clear_devices(self):
+        """Mock clear devices."""
+
+    def list_devices(self):
+        """Mock list devices."""
+
+    def list_remote_devices(self):
+        """Mock list devices."""
 
 
 class MockSocket:

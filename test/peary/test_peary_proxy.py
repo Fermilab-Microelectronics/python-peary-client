@@ -98,7 +98,7 @@ def test_peary_proxy_get_device_known(monkeypatch):
         peary.peary_device.PearyDevice, "_request_name", mock_request_name
     )
 
-    def mock_request(_, *args):
+    def mock_request(*_):
         return b"0"
 
     proxy = PearyProxy(MockSocket(), MockProtocol)
@@ -108,7 +108,7 @@ def test_peary_proxy_get_device_known(monkeypatch):
     assert device.name == proxy.get_device("a").name
 
 
-def test_peary_proxy_get_device_unknown(monkeypatch):
+def test_peary_proxy_get_device_unknown():
     for name in ["alpha", "beta"]:
         with pytest.raises(
             peary.peary_proxy.PearyProxy.PearyProxyGetDeviceError,
@@ -138,12 +138,12 @@ def test_peary_proxy_clear_devices(monkeypatch):
     assert not proxy.list_devices()
 
     monkeypatch.setattr(MockProtocol, "request", mock_request(b"add_device a", b"0"))
-    device = proxy.add_device("a")
+    _ = proxy.add_device("a")
     assert proxy.list_devices() == ["a"]
 
     monkeypatch.setattr(MockProtocol, "request", mock_request(b"add_device b", b"1"))
-    device = proxy.add_device("b")
-    assert set(proxy.list_devices()) == set(["a", "b"])
+    _ = proxy.add_device("b")
+    assert set(proxy.list_devices()) == {"a", "b"}
 
     monkeypatch.setattr(MockProtocol, "request", mock_request(b"clear_devices", b""))
     proxy.clear_devices()
@@ -158,16 +158,16 @@ def test_peary_proxy_list_devices(monkeypatch):
         peary.peary_device.PearyDevice, "_request_name", mock_request_name
     )
 
-    def mock_request(_, *args):
+    def mock_request(*_):
         return b"0"
 
     proxy = PearyProxy(MockSocket(), MockProtocol)
     monkeypatch.setattr(MockProtocol, "request", mock_request)
     assert not proxy.list_devices()
-    device = proxy.add_device("a")
+    _ = proxy.add_device("a")
     assert proxy.list_devices() == ["a"]
-    device = proxy.add_device("b")
-    assert set(proxy.list_devices()) == set(["a", "b"])
+    _ = proxy.add_device("b")
+    assert set(proxy.list_devices()) == {"a", "b"}
 
 
 def test_peary_proxy_list_remote_devices(monkeypatch):
@@ -180,7 +180,6 @@ def test_peary_proxy_list_remote_devices(monkeypatch):
 
         return _mock_request
 
-    proxy = PearyProxy(MockSocket(), MockProtocol)
     monkeypatch.setattr(
         MockProtocol, "request", mock_request(b"list_devices", b"response-bytes")
     )

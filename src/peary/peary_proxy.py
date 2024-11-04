@@ -77,8 +77,8 @@ class PearyProxy(PearyProxyInterface):
         """
         try:
             return self._devices[name]
-        except KeyError:
-            raise PearyProxy.PearyProxyGetDeviceError(f"Unknown device: {name}")
+        except KeyError as e:
+            raise PearyProxy.PearyProxyGetDeviceError(f"Unknown device: {name}") from e
 
     def clear_devices(self) -> None:
         """Clear and close all configured devices."""
