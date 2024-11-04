@@ -8,11 +8,11 @@ def test_peary_protocol_class_constant_status_ok():
 
 
 def test_peary_protocol_class_constant_struct_header():
-    assert type(PearyProtocol.STRUCT_HEADER) is type(struct.Struct("!HH"))
+    assert PearyProtocol.STRUCT_HEADER.format == struct.Struct("!HH").format
 
 
 def test_peary_protocol_class_constant_struct_lenght():
-    assert type(PearyProtocol.STRUCT_LENGTH) is type(struct.Struct("!L"))
+    assert PearyProtocol.STRUCT_LENGTH.format == struct.Struct("!L").format
 
 
 def test_peary_protocol_class_constant_version():
