@@ -15,6 +15,12 @@ if TYPE_CHECKING:
 class PearyProxy(PearyProxyInterface):
     """Proxy for the remote peary server."""
 
+    class PearyProxyAddDeviceError(Exception):
+        """Exception for device related errors."""
+
+    class PearyProxyGetDeviceError(Exception):
+        """Exception for device related errors."""
+
     def __init__(
         self,
         socket: socket_type,
@@ -27,7 +33,7 @@ class PearyProxy(PearyProxyInterface):
             protocol_class: Protocol used during communication with the peary server.
 
         """
-        self._devices: dict[int, PearyDevice] = {}
+        self._devices: dict[str, PearyDevice] = {}
         self._socket: socket_type = socket
         self._protocol_class = protocol_class
 
@@ -37,39 +43,52 @@ class PearyProxy(PearyProxyInterface):
         """Send a keep-alive message to test the connection."""
         return self._protocol.request("")
 
-    def get_device(self, index: int) -> PearyDevice:
-        """Get the device object corresponding to the given index."""
-        device = self._devices.get(index)
-        if not device:
-            device = self._devices.setdefault(
-                index, PearyDevice(index, self._socket, self._protocol_class)
-            )
-        return device
+    def add_device(self, name: str) -> PearyDevice:
+        """Add a new device.
 
-    def list_devices(self) -> list[PearyDevice]:
-        """List configured devices."""
-        response = self._protocol.request("list_devices")
-        indices = [int(_) for _ in response.split()]
-        return [self.get_device(_) for _ in indices]
+        Args:
+            name: Name of device to add.
 
-    def clear_devices(self) -> bytes:
-        """Clear and close all configured devices."""
-        return self._protocol.request("clear_devices")
+        Returns:
+            PearyDevice: Instance of the added device.
 
-    def add_device(self, name: str, *args: str) -> PearyDevice:
-        """Add a new device of the given type."""
-        response = self._protocol.request("add_device", name, *args)
-        return self.get_device(int(response))
+        Raises:
+            PearyProxyAddDeviceError: If device already exists
 
-    def ensure_device(self, name: str) -> PearyDevice:
-        """Ensure at least one device of the given type exists and return it.
-
-        If there are multiple devices with the same name, the first one
-        is returned.
         """
-        devices_filtered = [d for d in self.list_devices() if d.name == name]
-        devices_sorted = sorted(devices_filtered, key=lambda _: _.index)
-        if devices_sorted:
-            return devices_sorted[0]
-        else:
-            return self.add_device(name)
+        if name in self._devices:
+            raise PearyProxy.PearyProxyAddDeviceError(f"Device already exists: {name}")
+        index = int(self._protocol.request("add_device", name))
+        self._devices[name] = PearyDevice(index, self._socket, self._protocol_class)
+        return self._devices[name]
+
+    def get_device(self, name: str) -> PearyDevice:
+        """Get an existing device.
+
+        Args:
+            name: Name of device to get.
+
+        Returns:
+            PearyDevice: Instance of the device.
+
+        Raises:
+            PearyProxyGetDeviceError: If name is unknown.
+
+        """
+        try:
+            return self._devices[name]
+        except KeyError:
+            raise PearyProxy.PearyProxyGetDeviceError(f"Unknown device: {name}")
+
+    def clear_devices(self) -> None:
+        """Clear and close all configured devices."""
+        _ = self._protocol.request("clear_devices")
+        self._devices.clear()
+
+    def list_devices(self) -> list[str]:
+        """List all the added devices."""
+        return [*self._devices]
+
+    def list_remote_devices(self) -> bytes:
+        """List devices known to the remote server."""
+        return self._protocol.request("list_devices")

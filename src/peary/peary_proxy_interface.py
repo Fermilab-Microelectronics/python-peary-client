@@ -45,25 +45,37 @@ class PearyProxyInterface(abc.ABC):
         """Send a keep-alive message to test the connection."""
 
     @abc.abstractmethod
-    def list_devices(self) -> list[PearyDevice]:
-        """List configured devices."""
+    def add_device(self, name: str) -> PearyDevice:
+        """Add a new device to the system.
+
+        Args:
+            name: Name of device to add.
+
+        Returns:
+            PearyDevice: instance of the added device.
+
+        """
+
+    @abc.abstractmethod
+    def get_device(self, name: str) -> PearyDevice:
+        """Get an existing device.
+
+        Args:
+            name: Name of device to get.
+
+        Returns:
+            PearyDevice: Instance of the device.
+
+        """
 
     @abc.abstractmethod
     def clear_devices(self) -> bytes:
         """Clear and close all configured devices."""
 
     @abc.abstractmethod
-    def get_device(self, index: int) -> PearyDevice:
-        """Get the device object corresponding to the given index."""
+    def list_devices(self) -> list[str]:
+        """List all the added devices."""
 
     @abc.abstractmethod
-    def add_device(self, name: str, *args: str) -> PearyDevice:
-        """Add a new device of the given type."""
-
-    @abc.abstractmethod
-    def ensure_device(self, name: str) -> PearyDevice:
-        """Ensure at least one device of the given type exists and return it.
-
-        If there are multiple devices with the same name, the first one
-        is returned.
-        """
+    def list_devices(self) -> bytes:
+        """List devices known to the remote server."""
