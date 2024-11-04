@@ -35,11 +35,13 @@ def lint(session):
     session.run("isort", "--check", "--diff", "--color", "--profile", "black", ".")
     session.run("pyprojectsort", "--diff")
     session.run("ruff", "check", "src")
-    session.run("ruff", "check", "test", "--ignore=D,ANN,S101,PLR2004")
+    session.run("ruff", "check", "test", "--ignore=D,ANN,S101,PLR2004,UP012")
     session.run("pylint", "src", "--enable-all-extensions")
     session.run(
         "pylint",
         "test",
+        "--disable=missing-param-doc",
+        "--disable=missing-type-doc",
         "--disable=duplicate-code",
         "--disable=missing-class-docstring",
         "--disable=missing-function-docstring",
