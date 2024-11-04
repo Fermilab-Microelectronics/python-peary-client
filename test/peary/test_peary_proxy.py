@@ -11,24 +11,6 @@ class MockSocket:
     def __init__(self, *args, **kwargs):
         pass
 
-    def connect(self, *args):
-        pass
-
-    def recv(self, *args):
-        pass
-
-    def send(self, *args):
-        pass
-
-    def shutdown(self, *args):
-        pass
-
-    def settimeout(self, *args):
-        pass
-
-    def close(self):
-        pass
-
 
 class MockProtocol(PearyProtocolInterface):
     def __init__(self, socket: socket_type, timeout: int = 10):
@@ -39,13 +21,6 @@ class MockProtocol(PearyProtocolInterface):
 
 
 def test_peary_proxy_keep_alive(monkeypatch):
-    def mock_request_name(_):
-        pass
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
     def mock_request(encoded_request, return_value):
         def _mock_request(_, msg, *args):
             nonlocal encoded_request
@@ -134,17 +109,6 @@ def test_peary_proxy_get_device_known(monkeypatch):
 
 
 def test_peary_proxy_get_device_unknown(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
-    def mock_request(_, *args):
-        return b"0"
-
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
     for name in ["alpha", "beta"]:
         with pytest.raises(
             peary.peary_proxy.PearyProxy.PearyProxyGetDeviceError,
@@ -207,13 +171,6 @@ def test_peary_proxy_list_devices(monkeypatch):
 
 
 def test_peary_proxy_list_remote_devices(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
     def mock_request(encoded_request, return_value):
         def _mock_request(_, *args):
             nonlocal encoded_request
