@@ -6,7 +6,7 @@ requires = [
 
 [project]
 dependencies = [
-    "labtest @ git+ssh://git@github.com/ic-designer/python-labtest.git#main",
+    "labtest @ git+https://github.com/ic-designer/python-labtest.git#main",
 ]
 description = "Python code used for testing the SUNROCK chip."
 name = "sunrock-labtests"
