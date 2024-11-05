@@ -20,6 +20,11 @@ file = "LICENSE"
 dev = [
     "black",
     "coverage",
+    "flake8-bugbear",
+    "flake8-class-attributes-order",
+    "flake8-comprehensions",
+    "flake8-pytest-style",
+    "flake8-use-fstring",
     "isort",
     "isort[colors]",
     "mypy",

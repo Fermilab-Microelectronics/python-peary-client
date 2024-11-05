@@ -1,0 +1,4 @@
+[flake8]
+ignore = E203,PT005,W503
+max-line-length = 88
+use_class_attributes_order_strict_mode = True

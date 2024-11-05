@@ -32,6 +32,7 @@ def lint(session):
     """Runs lint checks"""
     session.install("-e", ".[dev]")
     session.run("black", "--check", "--diff", "--color", ".")
+    session.run("flake8", "src", "test")
     session.run("isort", "--check", "--diff", "--color", "--profile", "black", ".")
     session.run("pyprojectsort", "--diff")
     session.run("ruff", "check", "src")
