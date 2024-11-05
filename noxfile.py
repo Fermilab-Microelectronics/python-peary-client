@@ -37,7 +37,7 @@ def lint(session):
     session.run("pyprojectsort", "--diff")
     session.run("ruff", "check", "src")
     session.run("ruff", "check", "test", "--ignore=D,ANN,S101,PLR2004,UP012")
-    session.run("pylint", "src", "--enable-all-extensions")
+    session.run("pylint", "--enable-all-extensions", "src")
     session.run(
         "pylint",
         "test",
