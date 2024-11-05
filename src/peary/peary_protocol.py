@@ -20,11 +20,6 @@ class DecodedBytes(NamedTuple):
 class PearyProtocol(PearyProtocolInterface):
     """Protocol for encoding and decoding communication with a remote peary server."""
 
-    STATUS_OK = 0
-    STRUCT_HEADER = struct.Struct("!HH")
-    STRUCT_LENGTH = struct.Struct("!L")
-    VERSION = b"1"
-
     class DecodeError(Exception):
         """Exception for failing decode."""
 
@@ -43,6 +38,11 @@ class PearyProtocol(PearyProtocolInterface):
     class IncompatibleProtocolError(Exception):
         """Exception for incompatible client and server protocols."""
 
+    STATUS_OK = 0
+    STRUCT_HEADER = struct.Struct("!HH")
+    STRUCT_LENGTH = struct.Struct("!L")
+    VERSION = b"1"
+
     def __init__(self, socket: socket_type, timeout: int = 10) -> None:
         """Initializes a new peary proxy.
 
@@ -59,6 +59,53 @@ class PearyProtocol(PearyProtocolInterface):
 
         self._socket.settimeout(timeout)
         self._verify_compatible_version()
+
+    @staticmethod
+    def encode(payload: bytes, tag: int, status: int) -> bytes:
+        """Encodes a request into a sequence of bytes.
+
+        Args:
+            payload: The data payload encoded into the sequence.
+            tag: Identifier encoded into the sequence.
+            status: Status encoded into the sequence.
+
+        Returns:
+            bytes: The encoded sequence of bytes.
+
+        """
+        header = PearyProtocol.STRUCT_HEADER.pack(tag, status)
+        length = PearyProtocol.STRUCT_LENGTH.pack(len(header) + len(payload))
+        return b"".join([length, header, payload])
+
+    @staticmethod
+    def decode(data: bytes) -> DecodedBytes:
+        """Decodes data into a sequence of bytes.
+
+        Args:
+            data: The encoded bytes
+
+        Returns:
+            A tuple containing the response message, response id, and response status.
+
+        """
+        if len(data) < PearyProtocol.STRUCT_LENGTH.size:
+            raise PearyProtocol.DecodeError(
+                f"Insufficent number of bytes: {len(data)}."
+            )
+        (length,) = PearyProtocol.STRUCT_LENGTH.unpack(
+            data[: PearyProtocol.STRUCT_LENGTH.size]
+        )
+
+        if len(data) != (PearyProtocol.STRUCT_LENGTH.size + length):
+            raise PearyProtocol.DecodeError("Incorrect number of bytes")
+        tag, status = PearyProtocol.STRUCT_HEADER.unpack(
+            data[
+                PearyProtocol.STRUCT_LENGTH.size : PearyProtocol.STRUCT_LENGTH.size
+                + PearyProtocol.STRUCT_HEADER.size
+            ]
+        )
+        payload = data[PearyProtocol.STRUCT_HEADER.size - length :]
+        return DecodedBytes(payload, tag, status)
 
     def request(self, msg: str, *args: str, buffer_size: int = 4096) -> bytes:
         """Initiates a requst to the connected peary server.
@@ -150,50 +197,3 @@ class PearyProtocol(PearyProtocolInterface):
             raise PearyProtocol.IncompatibleProtocolError(
                 f"Unsupported protocol version: {version!r}"
             )
-
-    @staticmethod
-    def encode(payload: bytes, tag: int, status: int) -> bytes:
-        """Encodes a request into a sequence of bytes.
-
-        Args:
-            payload: The data payload encoded into the sequence.
-            tag: Identifier encoded into the sequence.
-            status: Status encoded into the sequence.
-
-        Returns:
-            bytes: The encoded sequence of bytes.
-
-        """
-        header = PearyProtocol.STRUCT_HEADER.pack(tag, status)
-        length = PearyProtocol.STRUCT_LENGTH.pack(len(header) + len(payload))
-        return b"".join([length, header, payload])
-
-    @staticmethod
-    def decode(data: bytes) -> DecodedBytes:
-        """Decodes data into a sequence of bytes.
-
-        Args:
-            data: The encoded bytes
-
-        Returns:
-            A tuple containing the response message, response id, and response status.
-
-        """
-        if len(data) < PearyProtocol.STRUCT_LENGTH.size:
-            raise PearyProtocol.DecodeError(
-                f"Insufficent number of bytes: {len(data)}."
-            )
-        (length,) = PearyProtocol.STRUCT_LENGTH.unpack(
-            data[: PearyProtocol.STRUCT_LENGTH.size]
-        )
-
-        if len(data) != (PearyProtocol.STRUCT_LENGTH.size + length):
-            raise PearyProtocol.DecodeError("Incorrect number of bytes")
-        tag, status = PearyProtocol.STRUCT_HEADER.unpack(
-            data[
-                PearyProtocol.STRUCT_LENGTH.size : PearyProtocol.STRUCT_LENGTH.size
-                + PearyProtocol.STRUCT_HEADER.size
-            ]
-        )
-        payload = data[PearyProtocol.STRUCT_HEADER.size - length :]
-        return DecodedBytes(payload, tag, status)

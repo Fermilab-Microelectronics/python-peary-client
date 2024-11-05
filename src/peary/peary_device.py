@@ -31,15 +31,6 @@ class PearyDevice:
         self._protocol = protocol_class(socket)
         self._name = self._request_name()
 
-    def __repr__(self) -> str:
-        """Returns a string representation for the device.
-
-        Returns:
-            String: The string representation of the device instance.
-
-        """
-        return f"{self.name}({self.index})"
-
     @property
     def index(self) -> int:
         """Returns the device index."""
@@ -50,26 +41,8 @@ class PearyDevice:
         """Returns the device type."""
         return self._name
 
-    def _request(self, cmd: str, *args: str) -> bytes:
-        """Send a per-device request to the host and returns response payload.
-
-        Args:
-            cmd: The device command to be performed by the host.
-            args: Additional device command arguments sent to host.
-
-        Returns:
-            bytes: response payload.
-
-        """
-        return self._protocol.request(f"device.{cmd}", str(self.index), *args)
-
-    def _request_name(self) -> str:
-        """Requests the name of the device."""
-        return self._request("name").decode("utf-8")
-
     # fixed device functionality is added explicitely with
     # additional return value decoding where appropriate
-
     def power_on(self) -> bytes:
         """Power on the device."""
         return self._request("power_on")
@@ -137,3 +110,29 @@ class PearyDevice:
     def switch_off(self, name: str) -> bytes:
         """Switch off a periphery port."""
         return self._request("switch_off", name)
+
+    def __repr__(self) -> str:
+        """Returns a string representation for the device.
+
+        Returns:
+            String: The string representation of the device instance.
+
+        """
+        return f"{self.name}({self.index})"
+
+    def _request(self, cmd: str, *args: str) -> bytes:
+        """Send a per-device request to the host and returns response payload.
+
+        Args:
+            cmd: The device command to be performed by the host.
+            args: Additional device command arguments sent to host.
+
+        Returns:
+            bytes: response payload.
+
+        """
+        return self._protocol.request(f"device.{cmd}", str(self.index), *args)
+
+    def _request_name(self) -> str:
+        """Requests the name of the device."""
+        return self._request("name").decode("utf-8")
