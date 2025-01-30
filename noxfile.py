@@ -24,7 +24,8 @@ def clean(session):
 def cli(session):
     """Runs CLI"""
     session.install("-e", ".[dev]")
-    session.run(*session.posargs)
+    if session.posargs:
+        session.run(*session.posargs)
 
 
 @nox.session(tags=["check"])
