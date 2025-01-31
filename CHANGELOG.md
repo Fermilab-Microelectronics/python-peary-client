@@ -16,10 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - YYYY-MM-DD
 ### Added
-- Created initial source files.
-- Created initial tests.
+- Seperated the peary client package from another project to create this package.
 ### Changed
 ### Deprecated
 ### Fixed
-- Python version set using `.python-version` with `pyenv`.
 ### Security
