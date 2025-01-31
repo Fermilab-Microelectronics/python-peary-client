@@ -155,8 +155,7 @@ class PearyProtocol(PearyProtocolInterface):
             RequestSendError: If the data failed to send
 
         """
-        size = self._socket.send(data)
-        if size != len(data):
+        if (size := self._socket.send(data)) != len(data):
             raise PearyProtocol.RequestSendError(f"Failed to send request: {data!r}")
         return size
 
@@ -192,8 +191,7 @@ class PearyProtocol(PearyProtocolInterface):
             IncompatibleProtocolError: If versions are incompatible.
 
         """
-        version: bytes = self.request("protocol_version")
-        if version != self.VERSION:
+        if (version := self.request("protocol_version")) != self.VERSION:
             raise PearyProtocol.IncompatibleProtocolError(
                 f"Unsupported protocol version: {version!r}"
             )
