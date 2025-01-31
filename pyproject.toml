@@ -9,10 +9,10 @@ dependencies = [
     "labtest @ git+https://github.com/ic-designer/python-labtest.git#main",
 ]
 description = "Python code used for testing the SUNROCK chip."
-name = "sunrock-labtests"
+name = "peary-client"
 readme = "README.md"
 requires-python = ">=3.9"
-version = "0.1.0"
+version = "0.1.0-alpha"
 
 [project.license]
 file = "LICENSE"
