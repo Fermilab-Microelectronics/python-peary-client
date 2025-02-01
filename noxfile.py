@@ -13,25 +13,54 @@ nox.options.error_on_external_run = True
 nox.options.envdir = os.environ.get("NOX_ENVDIR", ".nox")
 
 
+@nox.session(default=False)
+def build_venv(session):
+    """Builds the virtual environment."""
+    session.install("-e", ".[dev]")
+    if session.posargs:
+        for task in session.posargs[0]:
+            task(session, *session.posargs[1:])
+
+
 @nox.session(default=False, python=False)
 def clean(session):
-    """Clean up build artifacts."""
+    """Cleans the virtual environments."""
     session.log(f"Removing build artifacts from '{nox.options.envdir}'")
     shutil.rmtree(nox.options.envdir, ignore_errors=True)
 
 
 @nox.session(default=False)
 def cli(session):
-    """Runs CLI"""
-    session.install("-e", ".[dev]")
-    if session.posargs:
-        session.run(*session.posargs)
+    """Runs the CLI."""
+    session.notify("build_venv", posargs=([_cli], *session.posargs))
 
 
-@nox.session(tags=["check"])
+@nox.session
 def lint(session):
-    """Runs lint checks"""
-    session.install("-e", ".[dev]")
+    """Runs lint checks."""
+    session.notify("build_venv", posargs=([_lint], *session.posargs))
+
+
+@nox.session
+def style(session):
+    """Runs linters and fixers."""
+    session.notify("build_venv", posargs=([_style], *session.posargs))
+
+
+@nox.session
+def test(session):
+    """Runs tests."""
+    session.notify("build_venv", posargs=([_test], *session.posargs))
+
+
+def _cli(session, *args):
+    """Executes the environment command for the CLI."""
+    if session.posargs:
+        session.run(*args)
+
+
+def _lint(session):
+    """Executes the environment command for the lint checks."""
     session.run("black", "--check", "--diff", "--color", ".")
     session.run("flake8", "src", "test")
     session.run("isort", "--check", "--diff", "--color", "--profile", "black", ".")
@@ -52,19 +81,15 @@ def lint(session):
     session.run("mypy", "src", "test")
 
 
-@nox.session(tags=["fix"])
-def style(session):
-    """Runs linters and fixers"""
-    session.install("-e", ".[dev]")
+def _style(session):
+    """Executes the environment command for the stylers and fixers."""
     session.run("black", "--verbose", ".")
     session.run("isort", "--profile", "black", ".")
     session.run("pyprojectsort")
 
 
-@nox.session(tags=["check"])
-def test(session):
-    """Runs tests"""
-    session.install("-e", ".[dev]")
+def _test(session, *args):
+    """Executes the environment command for the tests."""
     session.run(
         "coverage",
         "run",
@@ -73,6 +98,6 @@ def test(session):
         "pytest",
         "--capture=sys",
         "-v",
-        *session.posargs,
+        *args,
     )
     session.run("coverage", "report", "--fail-under=100", "--show-missing")
