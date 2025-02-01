@@ -43,12 +43,12 @@ class PearyProtocol(PearyProtocolInterface):
     STRUCT_LENGTH = struct.Struct("!L")
     VERSION = b"1"
 
-    def __init__(self, socket: socket_type, timeout: int = 10) -> None:
+    def __init__(self, socket: socket_type, timeout: int = 1) -> None:
         """Initializes a new peary proxy.
 
         Args:
             socket: Socket connected to the remote peary server.
-            timeout: Socket timeout value in seconds. Defaults to 10.
+            timeout: Socket timeout value in seconds. Defaults to 1.
 
         Raises:
             IncompatibleProtocolError: If protocol version numbers do not match
