@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Seperated the peary client package from another project to create this package.
 ### Changed
+- Updated Nox to resuse the virtual environments accross sessions.
 ### Deprecated
 ### Fixed
 ### Security
