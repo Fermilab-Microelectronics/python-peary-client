@@ -36,5 +36,5 @@ jobs:
         python -Im nox -R -s cli -- pip freeze
     - name: Run Nox Checks
       run: |
-        python -Im nox -s lint
-        python -Im nox -s test
+        python -Im nox -R -s lint
+        python -Im nox -R -s test
