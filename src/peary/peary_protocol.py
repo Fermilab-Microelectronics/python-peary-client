@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import select
 import struct
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -43,12 +44,12 @@ class PearyProtocol(PearyProtocolInterface):
     STRUCT_LENGTH = struct.Struct("!L")
     VERSION = b"1"
 
-    def __init__(self, socket: socket_type, timeout: int = 10) -> None:
+    def __init__(self, socket: socket_type, timeout: int = 1) -> None:
         """Initializes a new peary proxy.
 
         Args:
             socket: Socket connected to the remote peary server.
-            timeout: Socket timeout value in seconds. Defaults to 10.
+            timeout: Socket timeout value in seconds. Defaults to 1.
 
         Raises:
             IncompatibleProtocolError: If protocol version numbers do not match
@@ -173,13 +174,14 @@ class PearyProtocol(PearyProtocolInterface):
 
         """
         data = bytearray()
-        # pylint: disable-next=while-used
-        while True:
+        while True:  # pylint: disable=while-used
             block: bytes = self._socket.recv(buffer_size)
-            # pylint: disable-next=compare-to-zero
-            if len(block) == 0:
-                break
             data.extend(block)
+            if len(block) < buffer_size:
+                break
+            readable, _, _ = select.select([self._socket], [], [], 0)
+            if self._socket not in readable:
+                break
         if not data:
             raise PearyProtocol.ResponseReceiveError("Failed to receive response.")
         return bytes(data)

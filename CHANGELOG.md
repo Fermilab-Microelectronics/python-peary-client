@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Seperated the peary client package from another project to create this package.
 ### Changed
 - Updated Nox to resuse the virtual environments accross sessions.
+- Reduced the socket timeout for peary protocol from 10s to 1s.
 ### Deprecated
 ### Fixed
 ### Security

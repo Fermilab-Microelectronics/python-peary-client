@@ -19,7 +19,7 @@ def test_peary_protocol_init_timeout_default(monkeypatch):
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
     PearyProtocol(MockSocket())
-    assert MockSocket.timeout == 10
+    assert MockSocket.timeout == 1
 
 
 def test_peary_protocol_init_timeout_nondefault(monkeypatch):
