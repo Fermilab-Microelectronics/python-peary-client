@@ -24,4 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for the tests.
 ### Deprecated
 ### Fixed
+- Fixed bug with peary protocol socket calls where reading multiple buffers would cause
+  the socket to hang due to incorrect usage of non-blocking operations.
 ### Security
