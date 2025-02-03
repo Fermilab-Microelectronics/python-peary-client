@@ -47,15 +47,6 @@ exclude_also = [
 [tool.pylint.format]
 max-line-length = "88"
 
-[tool.pylint.messages_control]
-disable = "C0330, C0326"
-
-[tool.ruff]
-src = [
-    "src",
-    "tests",
-]
-
 [tool.ruff.lint]
 ignore = [
     "COM812",
@@ -64,7 +55,6 @@ ignore = [
     "EM101",
     "EM102",
     "FIX002",
-    "ISC001",
     "RET505",
     "TD003",
     "TRY003",

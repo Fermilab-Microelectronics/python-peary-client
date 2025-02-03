@@ -70,13 +70,16 @@ def _lint(session):
     session.run("pylint", "--enable-all-extensions", "src")
     session.run(
         "pylint",
+        "--enable-all-extensions",
         "test",
         "--disable=duplicate-code",
+        "--disable=magic-value-comparison",
         "--disable=missing-class-docstring",
         "--disable=missing-function-docstring",
         "--disable=missing-module-docstring",
         "--disable=missing-param-doc",
         "--disable=missing-type-doc",
+        "--disable=no-self-use",
     )
     session.run("mypy", "src", "test")
 

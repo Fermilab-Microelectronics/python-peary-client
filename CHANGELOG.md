@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated Nox to resuse the virtual environments accross sessions.
 - Reduced the socket timeout for peary protocol from 10s to 1s.
+- Updated the linter settings by removing unecessary disables and turning on more checks
+  for the tests.
 ### Deprecated
 ### Fixed
 ### Security
