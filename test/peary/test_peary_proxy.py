@@ -109,7 +109,7 @@ def test_peary_proxy_get_device_known(monkeypatch):
 
 
 def test_peary_proxy_get_device_unknown():
-    for name in ["alpha", "beta"]:
+    for name in ("alpha", "beta"):
         with pytest.raises(
             peary.peary_proxy.PearyProxy.PearyProxyGetDeviceError,
             match=f"Unknown device: {name}",

@@ -149,7 +149,7 @@ def test_peary_client_context_manager_enter_socket_exit_gracefully(monkeypatch):
         """Mock exception for testing purposes."""
 
     mock_socket = MockSocket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
+    try:  # pylint: disable=too-many-try-statements
         with peary.PearyClient("", proxy_class=MockProxy):
             raise MockError  # noqa: TRY301
     except MockError:
