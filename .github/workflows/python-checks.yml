@@ -29,10 +29,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Setup
       run: |
-        python -m pip install --upgrade pip
+        python -Im pip install --upgrade pip
         python -Im pip install nox
     - name: Report Dependencies
       run: |
+        python -Im pip freeze
         python -Im nox -R -s cli -- pip freeze
     - name: Run Nox Checks
       run: |
