@@ -8,12 +8,11 @@ import shutil
 
 import nox
 
-nox.options.reuse_venv = True
 nox.options.error_on_external_run = True
 nox.options.envdir = os.environ.get("NOX_ENVDIR", ".nox")
 
 
-@nox.session(default=False)
+@nox.session(reuse_venv=True, default=False)
 def build_venv(session):
     """Builds the virtual environment."""
     session.install("-e", ".[dev]")
@@ -22,32 +21,32 @@ def build_venv(session):
             task(session, *session.posargs[1:])
 
 
-@nox.session(default=False, python=False)
+@nox.session(reuse_venv=True, default=False, python=False)
 def clean(session):
     """Cleans the virtual environments."""
     session.log(f"Removing build artifacts from '{nox.options.envdir}'")
     shutil.rmtree(nox.options.envdir, ignore_errors=True)
 
 
-@nox.session(default=False)
+@nox.session(reuse_venv=True, default=False)
 def cli(session):
     """Runs the CLI."""
     session.notify("build_venv", posargs=([_cli], *session.posargs))
 
 
-@nox.session
+@nox.session(reuse_venv=True)
 def lint(session):
     """Runs lint checks."""
     session.notify("build_venv", posargs=([_lint], *session.posargs))
 
 
-@nox.session
+@nox.session(reuse_venv=True)
 def style(session):
     """Runs linters and fixers."""
     session.notify("build_venv", posargs=([_style], *session.posargs))
 
 
-@nox.session
+@nox.session(reuse_venv=True)
 def test(session):
     """Runs tests."""
     session.notify("build_venv", posargs=([_test], *session.posargs))
