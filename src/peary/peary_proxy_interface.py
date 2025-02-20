@@ -3,12 +3,12 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING
 
+from peary.peary_device import PearyDevice
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
     from socket import socket as socket_type
 
-    from peary.peary_device import PearyDevice
     from peary.peary_protocol_interface import PearyProtocolInterface
 
 
@@ -45,26 +45,29 @@ class PearyProxyInterface(abc.ABC):
         """Send a keep-alive message to test the connection."""
 
     @abc.abstractmethod
-    def add_device(self, name: str) -> PearyDevice:
-        """Add a new device to the system.
+    def add_device(
+        self, name: str, device_class: type[PearyDevice] = PearyDevice
+    ) -> type[PearyDevice]:
+        """Add a new device.
 
         Args:
             name: Name of device to add.
+            device_class: Class used to construct the device. Defaults to PearyDevice.
 
         Returns:
-            PearyDevice: instance of the added device.
+            type[PearyDevice]: Instance of the added device.
 
         """
 
     @abc.abstractmethod
-    def get_device(self, name: str) -> PearyDevice:
+    def get_device(self, name: str) -> type[PearyDevice]:
         """Get an existing device.
 
         Args:
             name: Name of device to get.
 
         Returns:
-            PearyDevice: Instance of the device.
+            type[PearyDevice]: Instance of the device.
 
         """
 

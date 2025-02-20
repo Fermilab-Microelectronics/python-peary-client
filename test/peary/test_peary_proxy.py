@@ -3,6 +3,7 @@ from socket import socket as socket_type
 import pytest
 
 import peary
+from peary.peary_device import PearyDevice
 from peary.peary_protocol_interface import PearyProtocolInterface
 from peary.peary_proxy import PearyProxy
 
@@ -88,6 +89,32 @@ def test_peary_proxy_add_device_repeated_name(monkeypatch):
         match="Device already exists: a",
     ):
         proxy.add_device("a")
+
+
+def test_peary_proxy_add_device_default_device_class(monkeypatch):
+    monkeypatch.setattr(
+        peary.peary_device.PearyDevice, "_request_name", lambda _: "name"
+    )
+    monkeypatch.setattr(MockProtocol, "request", lambda *_: 0)
+    proxy = PearyProxy(MockSocket(), MockProtocol)
+    assert isinstance(proxy.add_device("name"), PearyDevice)
+
+
+def test_peary_proxy_add_device_explicit_device_class(monkeypatch):
+    monkeypatch.setattr(peary.peary_device.PearyDevice, "_request_name", lambda _: "")
+    monkeypatch.setattr(MockProtocol, "request", lambda *_: 0)
+    proxy = PearyProxy(MockSocket(), MockProtocol)
+    assert isinstance(proxy.add_device("name", PearyDevice), PearyDevice)
+
+
+def test_peary_proxy_add_device_derived_device_class(monkeypatch):
+    class MockDevice(PearyDevice):
+        pass
+
+    monkeypatch.setattr(peary.peary_device.PearyDevice, "_request_name", lambda _: "")
+    monkeypatch.setattr(MockProtocol, "request", lambda *_: 0)
+    proxy = PearyProxy(MockSocket(), MockProtocol)
+    assert isinstance(proxy.add_device("", MockDevice), MockDevice)
 
 
 def test_peary_proxy_get_device_known(monkeypatch):
