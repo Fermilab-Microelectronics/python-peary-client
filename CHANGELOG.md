@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reduced the socket timeout for peary protocol from 10s to 1s.
 - Updated the linter settings by removing unecessary disables and turning on more checks
   for the tests.
+- Udpated the `PearyProxy` tests to removed cluttered redundant code for mocking
+  internal socket communications.
 ### Deprecated
 ### Fixed
 - Fixed bug with peary protocol socket calls where reading multiple buffers would cause

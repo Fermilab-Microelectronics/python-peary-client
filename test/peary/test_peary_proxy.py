@@ -8,11 +8,6 @@ from peary.peary_protocol_interface import PearyProtocolInterface
 from peary.peary_proxy import PearyProxy
 
 
-class MockSocket:
-    def __init__(self, *args, **kwargs):
-        pass
-
-
 class MockProtocol(PearyProtocolInterface):
     def __init__(self, socket: socket_type, timeout: int = 10):
         """Mock __init__"""
@@ -21,37 +16,33 @@ class MockProtocol(PearyProtocolInterface):
         """Mock request"""
 
 
-def test_peary_proxy_keep_alive(monkeypatch):
-    def mock_request(encoded_request, return_value):
-        def _mock_request(_, msg, *args):
-            nonlocal encoded_request
-            nonlocal return_value
-            assert " ".join([msg, *args]).encode("utf-8") == encoded_request
-            return return_value
-
-        return _mock_request
-
-    monkeypatch.setattr(MockProtocol, "request", mock_request(b"", b""))
-    assert PearyProxy(MockSocket(), MockProtocol).keep_alive() == b""
+class MockSocket:
+    pass
 
 
-def test_peary_proxy_add_device_unique_name(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
-    def mock_request(encoded_request, return_value):
-        def _mock_request(_, *args):
+@pytest.fixture(name="mock_request")
+def _mock_request():
+    def __mock_request(encoded_request, return_value):
+        def mock_request_assert_encoded_result(_, *args):
             nonlocal encoded_request
             nonlocal return_value
             assert " ".join(args).encode("utf-8") == encoded_request
             return return_value
 
-        return _mock_request
+        return mock_request_assert_encoded_result
 
+    return __mock_request
+
+
+def test_peary_proxy_keep_alive(monkeypatch, mock_request):
+    monkeypatch.setattr(MockProtocol, "request", mock_request(b"", b""))
+    assert PearyProxy(MockSocket(), MockProtocol).keep_alive() == b""
+
+
+def test_peary_proxy_add_device_unique_name(monkeypatch, mock_request):
+    monkeypatch.setattr(
+        peary.peary_device.PearyDevice, "_request_name", lambda _: "name"
+    )
     proxy = PearyProxy(MockSocket(), MockProtocol)
     for name, index in zip(["alpha", "beta"], [0, 1]):
         monkeypatch.setattr(
@@ -64,23 +55,10 @@ def test_peary_proxy_add_device_unique_name(monkeypatch):
         assert str(proxy.add_device(name)) == f"name({index})"
 
 
-def test_peary_proxy_add_device_repeated_name(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
+def test_peary_proxy_add_device_repeated_name(monkeypatch, mock_request):
     monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
+        peary.peary_device.PearyDevice, "_request_name", lambda _: "name"
     )
-
-    def mock_request(encoded_request, return_value):
-        def _mock_request(_, *args):
-            nonlocal encoded_request
-            nonlocal return_value
-            assert " ".join(args).encode("utf-8") == encoded_request
-            return return_value
-
-        return _mock_request
-
     proxy = PearyProxy(MockSocket(), MockProtocol)
     monkeypatch.setattr(MockProtocol, "request", mock_request(b"add_device a", b"0"))
     proxy.add_device("a")
@@ -118,18 +96,9 @@ def test_peary_proxy_add_device_derived_device_class(monkeypatch):
 
 
 def test_peary_proxy_get_device_known(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
-    def mock_request(*_):
-        return b"0"
-
+    monkeypatch.setattr(peary.peary_device.PearyDevice, "_request_name", lambda _: "")
     proxy = PearyProxy(MockSocket(), MockProtocol)
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
+    monkeypatch.setattr(MockProtocol, "request", lambda *_: b"0")
     device = proxy.add_device("a")
     assert device.index == proxy.get_device("a").index
     assert device.name == proxy.get_device("a").name
@@ -144,22 +113,8 @@ def test_peary_proxy_get_device_unknown():
             PearyProxy(MockSocket(), MockProtocol).get_device(name)
 
 
-def test_peary_proxy_clear_devices(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
-    def mock_request(encoded_request, return_value):
-        def _mock_request(_, *args):
-            nonlocal encoded_request
-            nonlocal return_value
-            assert " ".join(args).encode("utf-8") == encoded_request
-            return return_value
-
-        return _mock_request
+def test_peary_proxy_clear_devices(monkeypatch, mock_request):
+    monkeypatch.setattr(peary.peary_device.PearyDevice, "_request_name", lambda _: "")
 
     proxy = PearyProxy(MockSocket(), MockProtocol)
     assert not proxy.list_devices()
@@ -178,18 +133,10 @@ def test_peary_proxy_clear_devices(monkeypatch):
 
 
 def test_peary_proxy_list_devices(monkeypatch):
-    def mock_request_name(_):
-        return "name"
-
-    monkeypatch.setattr(
-        peary.peary_device.PearyDevice, "_request_name", mock_request_name
-    )
-
-    def mock_request(*_):
-        return b"0"
-
+    monkeypatch.setattr(peary.peary_device.PearyDevice, "_request_name", lambda _: "")
     proxy = PearyProxy(MockSocket(), MockProtocol)
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
+    monkeypatch.setattr(MockProtocol, "request", lambda *_: b"0")
+
     assert not proxy.list_devices()
     _ = proxy.add_device("a")
     assert proxy.list_devices() == ["a"]
@@ -197,16 +144,7 @@ def test_peary_proxy_list_devices(monkeypatch):
     assert set(proxy.list_devices()) == {"a", "b"}
 
 
-def test_peary_proxy_list_remote_devices(monkeypatch):
-    def mock_request(encoded_request, return_value):
-        def _mock_request(_, *args):
-            nonlocal encoded_request
-            nonlocal return_value
-            assert " ".join(args).encode("utf-8") == encoded_request
-            return return_value
-
-        return _mock_request
-
+def test_peary_proxy_list_remote_devices(monkeypatch, mock_request):
     monkeypatch.setattr(
         MockProtocol, "request", mock_request(b"list_devices", b"response-bytes")
     )
