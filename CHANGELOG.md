@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   packaes as well as the virtual environment packages.
 - Added a class argument to the the `add_device` method of the `PearyProxy` class so
   users can define cusotme interfaces for devices.
+- Python version is now reported with other dependecy versions in the gihub workflow.
 ### Changed
 - Updated Nox to resuse the virtual environments accross sessions.
 - Reduced the socket timeout for peary protocol from 10s to 1s.
