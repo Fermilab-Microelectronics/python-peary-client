@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   users can define cusotme interfaces for devices.
 - Python version is now reported with other dependecy versions in the gihub workflow.
 - Added `py.typed` to the source packages to allow for mypy typing across dependencies.
+- Created the supply classes that will be used to access the caribou board supplies.
 ### Changed
 - Updated Nox to resuse the virtual environments accross sessions.
 - Reduced the socket timeout for peary protocol from 10s to 1s.
