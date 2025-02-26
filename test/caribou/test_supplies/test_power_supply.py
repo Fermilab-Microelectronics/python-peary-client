@@ -9,6 +9,12 @@ class MockDevice:
     def get_voltage(self, name):
         return name
 
+    def switch_on(self, name):
+        return name
+
+    def switch_off(self, name):
+        return name
+
 
 def test_power_supply_name():
     assert PowerSupply("alpha", None).name == "alpha"
@@ -28,3 +34,13 @@ def test_power_supply_set_voltage():
 def test_power_supply_get_voltage():
     assert PowerSupply("alpha", MockDevice()).get_voltage() == "alpha"
     assert PowerSupply("beta", MockDevice()).get_voltage() == "beta"
+
+
+def test_power_supply_switch_on():
+    assert PowerSupply("alpha", MockDevice()).switch_on() == "alpha"
+    assert PowerSupply("beta", MockDevice()).switch_on() == "beta"
+
+
+def test_power_supply_switch_off():
+    assert PowerSupply("alpha", MockDevice()).switch_off() == "alpha"
+    assert PowerSupply("beta", MockDevice()).switch_off() == "beta"
