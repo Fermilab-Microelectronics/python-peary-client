@@ -20,21 +20,27 @@ class CaribouBoard(PearyDevice):
 
     Example of usage:
 
-        func test_setup(vdda=1.2, vddd=1.0, vbias=0.4, ibias=0.001):
+        func test_setup(vdda=1.2, vddd=1.0, vddio=1.8. vbias=0.4, ibias=0.001):
             device_carboard = client.add_device("SpacelyCaribouBasic", CaribouBoard)
 
-            supply_vdda = device_carboard.power_supply(CariboutBoard.PWR_OUT_1)
-            supply_vddd = device_carboard.power_supply(CariboutBoard.PWR_OUT_2)
-            supply_vbias = device_carboard.voltage_bias(CariboutBoard.VBIAS_1))
-            supply_ibias = device_carboard.current_bias(CariboutBoard.IBIAS_1))
+            supply_vdda = device_carboard.power_supply(CaribouBoard.PWR_OUT_1)
+            supply_vddd = device_carboard.power_supply(CaribouBoard.PWR_OUT_2)
+            supply_vddio = device_carboard.power_supply(CaribouBoard.PWR_OUT_3)
+            supply_vbias = device_carboard.voltage_bias(CaribouBoard.VBIAS_1))
+            supply_ibias = device_carboard.current_bias(CaribouBoard.IBIAS_1))
 
+            device_carboard.set_logic_level(vddio)
             supply_vdda.set_voltage(vdda)
-            supply_vddd.set_voltage(vddd)
-            supply_vbias.set_voltage(vibias)
-            supply_ibias.set_current(ibias)
+            supply_vdda.set_voltage(vddd)
+            supply_vdda.set_voltage(vddio)
+            supply_vdda.set_voltage(vbias)
+            supply_vdda.set_voltage(ibias)
 
-
-
+            supply_vdda.switch_on()
+            supply_vdda.switch_on()
+            supply_vdda.switch_on()
+            supply_vdda.switch_on()
+            supply_vdda.switch_on()
 
     """
 
