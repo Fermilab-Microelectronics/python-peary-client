@@ -172,6 +172,18 @@ class CaribouBoard(PearyDevice):
         """
         return self._current_bias_collection[name]
 
+    def set_logic_level(self, value: float) -> None:
+        """Set the logic level voltages.
+
+        Args:
+            value: logic level voltages.
+
+        Returns:
+            bytes: return value.
+        """
+        self._request("setInputCMOSLevel", str(value))
+        self._request("setOutputCMOSLevel", str(value))
+
     def write_i2c(self, bus: BusI2C, comp: int, addr: int, data: int) -> bytes:
         """Writes to the Caribou board I2C inerface.
 
