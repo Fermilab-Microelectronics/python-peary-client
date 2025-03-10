@@ -1,5 +1,5 @@
 [MAIN]
-fail-under = 1
+fail-under = 10
 load-plugins =
     pylint.extensions.docparams,
     pylint.extensions.docstyle,
