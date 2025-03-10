@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for the tests.
 - Udpated the `PearyProxy` tests to removed cluttered redundant code for mocking
   internal socket communications.
+- Tightened the requirements used to lint all of the tests.
 ### Deprecated
 ### Fixed
 - Fixed bug with peary protocol socket calls where reading multiple buffers would cause
