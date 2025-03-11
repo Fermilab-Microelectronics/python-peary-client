@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import select
-import socket as socket_module
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,25 +11,11 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from socket import socket as socket_type
 
-    from typing_extensions import Buffer
-
-
-# ruff: noqa: ARG002
-# pylint: disable=W0613
-class MockSocket(socket_module.socket):
-
-    def recv(self, size: int, flags: int = 0) -> bytes:
-        return b""
-
-    def send(self, data: Buffer, flags: int = 0) -> int:
-        return len(bytes(data))
-
-    def settimeout(self, value: float | None = None) -> None:
-        pass
+    from .conftest import MockSocket
 
 
 def test_peary_protocol_request_sent_message_without_args(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
@@ -43,13 +28,13 @@ def test_peary_protocol_request_sent_message_without_args(
         return PearyProtocol.encode(b"", 1, 0)
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "send", mock_send)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
-    PearyProtocol(MockSocket()).request("alpha")
+    monkeypatch.setattr(mock_socket, "send", mock_send)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
+    PearyProtocol(mock_socket()).request("alpha")
 
 
 def test_peary_protocol_request_sent_message_with_args(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
@@ -64,12 +49,14 @@ def test_peary_protocol_request_sent_message_with_args(
         return PearyProtocol.encode(b"", 1, 0)
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "send", mock_send)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
-    PearyProtocol(MockSocket()).request("alpha", "beta", "gamma")
+    monkeypatch.setattr(mock_socket, "send", mock_send)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
+    PearyProtocol(mock_socket()).request("alpha", "beta", "gamma")
 
 
-def test_peary_protocol_request_sending_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_peary_protocol_request_sending_error(
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
+) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
 
@@ -77,16 +64,16 @@ def test_peary_protocol_request_sending_error(monkeypatch: pytest.MonkeyPatch) -
         return len(data) - 1
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "send", mock_send)
+    monkeypatch.setattr(mock_socket, "send", mock_send)
 
     with pytest.raises(
         PearyProtocol.RequestSendError, match="Failed to send request:*"
     ):
-        PearyProtocol(MockSocket()).request("")
+        PearyProtocol(mock_socket()).request("")
 
 
 def test_peary_protocol_request_recieved_response_buffer_oversized(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
@@ -98,16 +85,16 @@ def test_peary_protocol_request_recieved_response_buffer_oversized(
         return PearyProtocol.encode(b"alpha", 1, 0)
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "send", mock_send)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
+    monkeypatch.setattr(mock_socket, "send", mock_send)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
     assert (
-        PearyProtocol(MockSocket()).request("alpha", buffer_size=4096)
+        PearyProtocol(mock_socket()).request("alpha", buffer_size=4096)
         == PearyProtocol.decode(PearyProtocol.encode(b"alpha", 1, 0)).payload
     )
 
 
 def test_peary_protocol_request_recieved_response_buffer_undersized(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     enocded_message = PearyProtocol.encode(b"alpha", 1, 0)
 
@@ -139,15 +126,17 @@ def test_peary_protocol_request_recieved_response_buffer_undersized(
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
     monkeypatch.setattr(select, "select", mock_select)
-    monkeypatch.setattr(MockSocket, "send", mock_send)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
+    monkeypatch.setattr(mock_socket, "send", mock_send)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
     assert (
-        PearyProtocol(MockSocket()).request("alpha", buffer_size=1)
+        PearyProtocol(mock_socket()).request("alpha", buffer_size=1)
         == PearyProtocol.decode(enocded_message).payload
     )
 
 
-def test_peary_protocol_request_receive_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_peary_protocol_request_receive_error(
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
+) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
 
@@ -155,16 +144,16 @@ def test_peary_protocol_request_receive_error(monkeypatch: pytest.MonkeyPatch) -
         return b""
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
 
     with pytest.raises(
         PearyProtocol.ResponseReceiveError, match="Failed to receive response."
     ):
-        PearyProtocol(MockSocket()).request("")
+        PearyProtocol(mock_socket()).request("")
 
 
 def test_peary_protocol_request_response_status_error(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
@@ -179,16 +168,16 @@ def test_peary_protocol_request_response_status_error(
         return next(recv_generator)
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
 
     with pytest.raises(
         PearyProtocol.ResponseStatusError, match="Failed response status 1*"
     ):
-        PearyProtocol(MockSocket()).request("")
+        PearyProtocol(mock_socket()).request("")
 
 
 def test_peary_protocol_request_response_sequence_error(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
     def mock_verify(_: PearyProtocol) -> None:
         pass
@@ -203,10 +192,10 @@ def test_peary_protocol_request_response_sequence_error(
         return next(recv_generator)
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
-    monkeypatch.setattr(MockSocket, "recv", mock_recv)
+    monkeypatch.setattr(mock_socket, "recv", mock_recv)
 
     with pytest.raises(
         PearyProtocol.ResponseSequenceError,
         match="Recieved out of order repsonse from*",
     ):
-        PearyProtocol(MockSocket()).request("")
+        PearyProtocol(mock_socket()).request("")
