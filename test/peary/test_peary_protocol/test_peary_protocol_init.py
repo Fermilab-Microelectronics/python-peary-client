@@ -1,20 +1,21 @@
+from __future__ import annotations
+
+import socket as socket_module
+
 import pytest
 
 from peary.peary_protocol import PearyProtocol
 
 
-class MockSocket:
+class MockSocket(socket_module.socket):
     timeout = None
 
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def settimeout(self, value):
+    def settimeout(self, value: float | None = None) -> None:
         MockSocket.timeout = value
 
 
-def test_peary_protocol_init_timeout_default(monkeypatch):
-    def mock_verify(*_):
+def test_peary_protocol_init_timeout_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    def mock_verify(_: PearyProtocol) -> None:
         pass
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
@@ -22,8 +23,10 @@ def test_peary_protocol_init_timeout_default(monkeypatch):
     assert MockSocket.timeout == 1
 
 
-def test_peary_protocol_init_timeout_nondefault(monkeypatch):
-    def mock_verify(*_):
+def test_peary_protocol_init_timeout_nondefault(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_verify(_: PearyProtocol) -> None:
         pass
 
     monkeypatch.setattr(PearyProtocol, "_verify_compatible_version", mock_verify)
@@ -31,8 +34,8 @@ def test_peary_protocol_init_timeout_nondefault(monkeypatch):
     assert MockSocket.timeout == 100
 
 
-def test_peary_protocol_init_version_supported(monkeypatch):
-    def mock_request_protocol_version(_, msg):
+def test_peary_protocol_init_version_supported(monkeypatch: pytest.MonkeyPatch) -> None:
+    def mock_request_protocol_version(_: type, msg: str) -> bytes:
         assert msg == "protocol_version"
         return b"1"
 
@@ -40,8 +43,10 @@ def test_peary_protocol_init_version_supported(monkeypatch):
     PearyProtocol(MockSocket())
 
 
-def test_peary_protocol_init_version_unsupported(monkeypatch):
-    def mock_request_protocol_version(_, msg):
+def test_peary_protocol_init_version_unsupported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_request_protocol_version(_: type, msg: str) -> bytes:
         assert msg == "protocol_version"
         return b"0"
 
