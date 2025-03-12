@@ -138,7 +138,7 @@ class PearyProtocol(PearyProtocolInterface):
             )
         if resp_id != self._tag:
             raise PearyProtocol.ResponseSequenceError(
-                f"Recieved out of order repsonse from '{msg}'"
+                f"Recieved out of order repsonse from '{msg}': {resp_id} != {self._tag}"
             )
 
         return resp
