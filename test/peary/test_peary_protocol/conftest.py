@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from peary.peary_protocol import PearyProtocol
+
 if TYPE_CHECKING:
     from typing_extensions import Buffer
 
@@ -14,7 +16,7 @@ class MockSocket(socket_module.socket):
 
     # pylint: disable-next=W0613
     def recv(self, size: int, flags: int = 0) -> bytes:  # noqa: ARG002
-        return b""
+        return PearyProtocol.encode(b"", 1, PearyProtocol.STATUS_OK)
 
     # pylint: disable-next=W0613
     def send(self, data: Buffer, flags: int = 0) -> int:  # noqa: ARG002
