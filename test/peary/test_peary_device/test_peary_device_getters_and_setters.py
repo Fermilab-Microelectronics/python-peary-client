@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import socket
-from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,14 +9,7 @@ from peary.peary_device import PearyDevice
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
-
-
-class MockPearyProtocol(PearyProtocol):
-    """A Mock Peary Protocol."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
+    from collections.abc import Callable
 
 
 class MockPearyDevice(PearyDevice):
@@ -27,95 +19,120 @@ class MockPearyDevice(PearyDevice):
         return ""
 
 
-@pytest.fixture(name="mock_device_request")
-def _mock_device_request(monkeypatch: pytest.MonkeyPatch) -> Callable:
+@pytest.fixture(name="mock_device")
+def _mock_device() -> Callable:
 
-    @contextmanager
-    def _mock_device_request_context(
-        index: int, req: str, resp: bytes = b""
-    ) -> Generator:
+    def _mock_device(index: int, req: str, resp: bytes = b"") -> MockPearyDevice:
 
-        def _mock_protocol_request(_: MockPearyProtocol, *args: str) -> bytes:
-            assert " ".join(args) == req
-            return resp
+        class MockPearyProtocol(PearyProtocol):
+            """A Mock Peary Protocol."""
 
-        with monkeypatch.context() as m:
-            m.setattr(MockPearyProtocol, "request", _mock_protocol_request)
-            yield MockPearyDevice(index, socket.socket(), MockPearyProtocol)
+            def request(
+                self, msg: str, *args: str, buffer_size: int = 4096  # noqa: ARG002
+            ) -> bytes:
+                assert " ".join([msg, *args]) == req
+                return resp
 
-    return _mock_device_request_context
+            def _verify_compatible_version(self) -> None:
+                pass
+
+        return MockPearyDevice(index, socket.socket(), MockPearyProtocol)
+
+    return _mock_device
 
 
-def test_peary_device_list_registers(mock_device_request: Callable) -> None:
-    with mock_device_request(
+def test_peary_device_list_registers(mock_device: Callable) -> None:
+    assert mock_device(
         index=0, req="device.list_registers 0", resp=b"alpha"
-    ) as device:
-        assert device.list_registers() == ["alpha"]
-    with mock_device_request(
+    ).list_registers() == ["alpha"]
+    assert mock_device(
         index=1, req="device.list_registers 1", resp=b"alpha beta gamma"
-    ) as device:
-        assert device.list_registers() == ["alpha", "beta", "gamma"]
+    ).list_registers() == ["alpha", "beta", "gamma"]
 
 
-def test_peary_device_get_register(mock_device_request: Callable) -> None:
+def test_peary_device_get_register(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
-        with mock_device_request(
+        assert mock_device(
             index=index, req=f"device.get_register {index} {name}", resp=value
-        ) as device:
-            assert device.get_register(name) == int(value)
+        ).get_register(name) == int(value)
 
 
-def test_peary_device_set_register(mock_device_request: Callable) -> None:
+def test_peary_device_set_register(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [0, 1]):
-        with mock_device_request(
-            index=index, req=f"device.set_register {index} {name} {value}", resp=b""
-        ) as device:
-            assert device.set_register(name, value) == b""
+        assert (
+            mock_device(
+                index=index, req=f"device.set_register {index} {name} {value}", resp=b""
+            ).set_register(name, value)
+            == b""
+        )
 
 
-def test_peary_device_get_memory(mock_device_request: Callable) -> None:
+def test_peary_device_get_memory(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
-        with mock_device_request(
+        assert mock_device(
             index=index, req=f"device.get_memory {index} {name}", resp=value
-        ) as device:
-            assert device.get_memory(name) == int(value)
+        ).get_memory(name) == int(value)
 
 
-def test_peary_device_set_memory(mock_device_request: Callable) -> None:
+def test_peary_device_set_memory(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [0, 1]):
-        with mock_device_request(
-            index=index, req=f"device.set_memory {index} {name} {value}", resp=b""
-        ) as device:
-            assert device.set_memory(name, value) == b""
+        assert (
+            mock_device(
+                index=index, req=f"device.set_memory {index} {name} {value}", resp=b""
+            ).set_memory(name, value)
+            == b""
+        )
 
 
-def test_peary_device_get_current(mock_device_request: Callable) -> None:
-    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
-        with mock_device_request(
+def test_peary_device_get_current(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"1.0", b"2.0"]):
+        assert mock_device(
             index=index, req=f"device.get_current {index} {name}", resp=value
-        ) as device:
-            assert device.get_current(name) == int(value)
+        ).get_current(name) == float(value)
 
 
-def test_peary_device_set_current(mock_device_request: Callable) -> None:
+def test_peary_device_set_current(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [0, 1]):
-        with mock_device_request(
-            index=index, req=f"device.set_current {index} {name} {value}", resp=b""
-        ) as device:
-            assert device.set_current(name, value) == b""
+        assert (
+            mock_device(
+                index=index, req=f"device.set_current {index} {name} {value}", resp=b""
+            ).set_current(name, value)
+            == b""
+        )
 
 
-def test_peary_device_get_voltage(mock_device_request: Callable) -> None:
-    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
-        with mock_device_request(
+def test_peary_device_get_voltage(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"1.0", b"2.0"]):
+        assert mock_device(
             index=index, req=f"device.get_voltage {index} {name}", resp=value
-        ) as device:
-            assert device.get_voltage(name) == int(value)
+        ).get_voltage(name) == float(value)
 
 
-def test_peary_device_set_voltage(mock_device_request: Callable) -> None:
+def test_peary_device_set_voltage(mock_device: Callable) -> None:
     for index, name, value in zip([0, 1], ["alpha", "beta"], [0, 1]):
-        with mock_device_request(
-            index=index, req=f"device.set_voltage {index} {name} {value}", resp=b""
-        ) as device:
-            assert device.set_voltage(name, value) == b""
+        assert (
+            mock_device(
+                index=index, req=f"device.set_voltage {index} {name} {value}", resp=b""
+            ).set_voltage(name, value)
+            == b""
+        )
+
+
+def test_peary_device_switch_on(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
+        assert (
+            mock_device(
+                index=index, req=f"device.switch_on {index} {name}", resp=value
+            ).switch_on(name)
+            == value
+        )
+
+
+def test_peary_device_switch_off(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"0", b"1"]):
+        assert (
+            mock_device(
+                index=index, req=f"device.switch_off {index} {name}", resp=value
+            ).switch_off(name)
+            == value
+        )
