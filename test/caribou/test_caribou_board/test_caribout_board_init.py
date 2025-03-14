@@ -1,64 +1,66 @@
 from __future__ import annotations
 
+import socket
+from typing import TYPE_CHECKING
+
+import pytest
+
 from caribou.caribou_board import CaribouBoard
+from peary.peary_protocol import PearyProtocol
 
-# TODO(Jeff): Test that the enables are declared are outputs at initialization
-
-
-# pylint: disable=missing-param-doc
-class MockProtocol:
-    def __init__(self, socket, **_):
-        self._socket = socket
-
-    def request(self, *_):
-        return self._socket.encode("utf-8")
+if TYPE_CHECKING:
+    # ruff: noqa: ANN401
+    from collections.abc import Callable
+    from typing import Any
 
 
-def test_caribou_board_init_index(monkeypatch):
-    def mock_request(_, *args):
-        return " ".join(args).encode("utf-8")
+class MockProtocol(PearyProtocol):
+    """A Mock Peary Protocol."""
 
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
-    assert CaribouBoard(0, None, MockProtocol).index == 0
-    assert CaribouBoard(1, None, MockProtocol).index == 1
+    def request(
+        self, msg: str, *args: str, buffer_size: int = 4096  # noqa: ARG002
+    ) -> bytes:
+        return " ".join([msg, *args]).encode("utf-8")
 
-
-def test_caribou_board_init_name(monkeypatch):
-    def mock_request(_, *args):
-        return " ".join(args).encode("utf-8")
-
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
-    assert CaribouBoard(0, None, MockProtocol).name == "device.name 0"
-    assert CaribouBoard(1, None, MockProtocol).name == "device.name 1"
+    def _verify_compatible_version(self) -> None:
+        pass
 
 
-def test_caribou_board_init_repr(monkeypatch):
-    def mock_request(_, *args):
-        return " ".join(args).encode("utf-8")
+@pytest.fixture(name="caribou_board")
+def _caribou_board() -> Callable:
 
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
-    assert str(CaribouBoard(0, None, MockProtocol)) == "device.name 0(0)"
-    assert str(CaribouBoard(1, None, MockProtocol)) == "device.name 1(1)"
+    def _initialize_caribou_board(index: int) -> CaribouBoard:
+        return CaribouBoard(index, socket.socket(), MockProtocol)
 
-
-def test_caribou_board_init_socket():
-    assert CaribouBoard(0, "alpha", MockProtocol).name == "alpha"
-    assert CaribouBoard(1, "beta", MockProtocol).name == "beta"
+    return _initialize_caribou_board
 
 
-def test_caribou_board_init_enable_power_supplies(monkeypatch):
+def test_caribou_board_init_index(caribou_board: Callable) -> None:
+    assert caribou_board(0).index == 0
+    assert caribou_board(1).index == 1
+
+
+def test_caribou_board_init_name(caribou_board: Callable) -> None:
+    assert caribou_board(0).name == "device.name 0"
+    assert caribou_board(1).name == "device.name 1"
+
+
+def test_caribou_board_init_repr(caribou_board: Callable) -> None:
+    assert str(caribou_board(0)) == "device.name 0(0)"
+    assert str(caribou_board(1)) == "device.name 1(1)"
+
+
+def test_caribou_board_init_enable_power_supplies(
+    monkeypatch: pytest.MonkeyPatch, caribou_board: Callable
+) -> None:
     transactions = []
 
-    def mock_write_i2c(*args):
+    def mock_write_i2c(*args: Any) -> None:
         nonlocal transactions
         transactions.append(" ".join([str(_) for _ in args]))
 
-    def mock_request(_, *args):
-        return " ".join(args).encode("utf-8")
-
-    monkeypatch.setattr(MockProtocol, "request", mock_request)
     monkeypatch.setattr(CaribouBoard, "write_i2c", mock_write_i2c)
-    CaribouBoard(0, None, MockProtocol)
+    caribou_board(0)
     assert transactions == [
         "device.name 0(0) BusI2C.BUS_0 118 6 0",
         "device.name 0(0) BusI2C.BUS_0 118 7 0",
