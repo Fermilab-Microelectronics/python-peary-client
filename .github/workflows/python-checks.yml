@@ -33,6 +33,7 @@ jobs:
         python -Im pip install nox
     - name: Report Dependencies
       run: |
+        python -V
         python -Im pip freeze
         python -Im nox -R -s cli -- pip freeze
     - name: Run Nox Checks

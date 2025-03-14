@@ -1,7 +1,7 @@
 from peary.peary_protocol import PearyProtocol
 
 
-def test_peary_protocol_encode_payload():
+def test_peary_protocol_encode_payload() -> None:
     assert (
         PearyProtocol.encode(b"alpha", 0, 0) == b"\x00\x00\x00\x09\x00\x00\x00\x00alpha"
     )
@@ -10,17 +10,17 @@ def test_peary_protocol_encode_payload():
     )
 
 
-def test_peary_protocol_encode_header_id():
+def test_peary_protocol_encode_header_id() -> None:
     assert PearyProtocol.encode(b"", 0, 0) == b"\x00\x00\x00\x04\x00\x00\x00\x00"
     assert PearyProtocol.encode(b"", 1, 0) == b"\x00\x00\x00\x04\x00\x01\x00\x00"
 
 
-def test_peary_protocol_encode_header_status():
+def test_peary_protocol_encode_header_status() -> None:
     assert PearyProtocol.encode(b"", 0, 0) == b"\x00\x00\x00\x04\x00\x00\x00\x00"
     assert PearyProtocol.encode(b"", 0, 1) == b"\x00\x00\x00\x04\x00\x00\x00\x01"
 
 
-def test_peary_protocol_encode_length():
+def test_peary_protocol_encode_length() -> None:
     assert PearyProtocol.encode(b"", 0, 0) == b"\x00\x00\x00\x04\x00\x00\x00\x00"
     assert PearyProtocol.encode(b"1", 0, 0) == b"\x00\x00\x00\x05\x00\x00\x00\x001"
     assert PearyProtocol.encode(b"12", 0, 0) == b"\x00\x00\x00\x06\x00\x00\x00\x0012"

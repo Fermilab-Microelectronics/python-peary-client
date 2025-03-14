@@ -65,7 +65,7 @@ def _lint(session):
     session.run("isort", "--check", "--diff", "--color", "--profile", "black", ".")
     session.run("pyprojectsort", "--diff")
     session.run("ruff", "check", "src")
-    session.run("ruff", "check", "test", "--ignore=D,ANN,S101,PLR2004,UP012")
+    session.run("ruff", "check", "test", "--ignore=D,S101,PLR2004,UP012")
     session.run("pylint", "--enable-all-extensions", "src")
     session.run(
         "pylint",
@@ -77,8 +77,8 @@ def _lint(session):
         "--disable=missing-function-docstring",
         "--disable=missing-module-docstring",
         "--disable=missing-param-doc",
-        "--disable=missing-type-doc",
-        "--disable=no-self-use",
+        "--disable=missing-return-doc",
+        "--disable=missing-yield-doc",
     )
     session.run("mypy", "src", "test")
 

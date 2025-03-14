@@ -1,34 +1,34 @@
-import socket
+from __future__ import annotations
+
+import socket as socket_module
 import struct
+from typing import TYPE_CHECKING, cast
 
-import peary
+from peary.peary_client import PearyClient
+from peary.peary_protocol import PearyProtocol
+from peary.peary_proxy import PearyProxy
+
+if TYPE_CHECKING:
+    from socket import socket as socket_type
+
+    import pytest
+
+    from peary.peary_protocol_interface import PearyProtocolInterface
+
+# TODO(Jeff): Rewrite tests using derived classes instead of monkey patching everything.
 
 
-class MockProxy(peary.peary_proxy_interface.PearyProxyInterface):
+class MockProxy(PearyProxy):
     """Mock proxy class."""
 
-    # pylint: disable-next=redefined-outer-name
-    def __init__(self, socket, **_):
+    # pylint: disable-next=W0231
+    def __init__(
+        self,
+        socket: socket_type,
+        protocol_class: type[PearyProtocolInterface] = PearyProtocol,  # noqa: ARG002
+    ) -> None:
         """Mock intializer"""
         self.socket = socket
-
-    def keep_alive(self):
-        """Mock keep alive."""
-
-    def add_device(self, *args):
-        """Add a new device of the given type."""
-
-    def get_device(self, *args):
-        """Mock get device."""
-
-    def clear_devices(self):
-        """Mock clear devices."""
-
-    def list_devices(self):
-        """Mock list devices."""
-
-    def list_remote_devices(self):
-        """Mock list devices."""
 
 
 class MockSocket:
@@ -48,111 +48,138 @@ class MockSocket:
     timeout = None
 
     # pylint: disable-next=super-init-not-called,unused-argument
-    def __init__(self, addr_family, socket_type, *args, **kwargs):  # noqa: ARG002
+    def __init__(self, addr_family: int, socket_type: int) -> None:
         self.addr_family = addr_family
         self.socket_type = socket_type
-        self.address = None
+        self.address: tuple[str, int] | None = None
 
-    def connect(self, address):
+    def connect(self, address: tuple[str, int]) -> None:
         """Mock connect method."""
         MockSocket.is_connected = True
         MockSocket.is_shutdown = False
         self.address = address
 
-    def shutdown(self, how):
+    # pylint: disable-next=R6301
+    def shutdown(self, how: int) -> None:
         """Mock connect method."""
         MockSocket.is_shutdown = True
         MockSocket.how_shutdown = how
 
-    def close(self):
+    # pylint: disable-next=R6301
+    def close(self) -> None:
         """Mock connect method."""
         MockSocket.is_connected = False
 
 
 # pylint: disable=no-member
-def test_peary_client_init_host():
-    assert peary.PearyClient("alpha").host == "alpha"
-    assert peary.PearyClient("beta").host == "beta"
+def test_peary_client_init_host() -> None:
+    assert PearyClient("alpha").host == "alpha"
+    assert PearyClient("beta").host == "beta"
 
 
-def test_peary_client_init_port():
-    assert peary.PearyClient("").port == 12345
-    assert peary.PearyClient("", 12345).port == 12345
-    assert peary.PearyClient("", 54321).port == 54321
+def test_peary_client_init_port() -> None:
+    assert PearyClient("").port == 12345
+    assert PearyClient("", 12345).port == 12345
+    assert PearyClient("", 54321).port == 54321
 
 
-def test_peary_client_init_proxy_class():
-    assert peary.PearyClient("").proxy_class is peary.peary_proxy.PearyProxy
-    assert peary.PearyClient("", proxy_class=MockProxy).proxy_class is MockProxy
+def test_peary_client_init_proxy_class() -> None:
+    assert PearyClient("").proxy_class is PearyProxy
+    assert PearyClient("", proxy_class=MockProxy).proxy_class is MockProxy
 
 
-def test_peary_client_init_socket(monkeypatch):
+def test_peary_client_init_socket(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
-    assert peary.PearyClient("").socket.addr_family == socket.AF_INET
-    assert peary.PearyClient("").socket.socket_type == socket.SOCK_STREAM
-    assert peary.PearyClient("").socket.address is None
-    assert peary.PearyClient("").socket.is_connected is None
-    assert peary.PearyClient("").socket.is_shutdown is None
+    assert (
+        cast("MockSocket", PearyClient("").socket).addr_family == socket_module.AF_INET
+    )
+    assert (
+        cast("MockSocket", PearyClient("").socket).socket_type
+        == socket_module.SOCK_STREAM
+    )
+    assert cast("MockSocket", PearyClient("").socket).address is None
+    assert cast("MockSocket", PearyClient("").socket).is_connected is None
+    assert cast("MockSocket", PearyClient("").socket).is_shutdown is None
 
 
-def test_peary_client_context_manager_runs_statements(monkeypatch):
+def test_peary_client_context_manager_runs_statements(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
-    with peary.PearyClient("", proxy_class=MockProxy):
+    with PearyClient("", proxy_class=MockProxy):
         test_result = True
     assert test_result is True
 
 
-def test_peary_client_context_manager_enter_proxy_class(monkeypatch):
+def test_peary_client_context_manager_enter_proxy_class(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
-    with peary.PearyClient("", proxy_class=MockProxy) as client:
+    with PearyClient("", proxy_class=MockProxy) as client:
         assert isinstance(client, MockProxy)
 
 
-def test_peary_client_context_manager_enter_socket_connects(monkeypatch):
+def test_peary_client_context_manager_enter_socket_connects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
-    with peary.PearyClient("", proxy_class=MockProxy) as client:
-        assert client.socket.is_connected is True
-        assert client.socket.is_shutdown is False
+    with PearyClient("", proxy_class=MockProxy) as client:
+        assert cast("MockSocket", cast("MockProxy", client).socket).is_connected is True
+        assert cast("MockSocket", cast("MockProxy", client).socket).is_shutdown is False
 
 
-def test_peary_client_context_manager_enter_socket_address(monkeypatch):
+def test_peary_client_context_manager_enter_socket_address(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
-    with peary.PearyClient("alpha", port=0, proxy_class=MockProxy) as client:
-        assert client.socket.address == ("alpha", 0)
-    with peary.PearyClient("beta", port=1, proxy_class=MockProxy) as client:
-        assert client.socket.address == ("beta", 1)
+    with PearyClient("alpha", port=0, proxy_class=MockProxy) as client:
+        assert cast("MockSocket", cast("MockProxy", client).socket).address == (
+            "alpha",
+            0,
+        )
+    with PearyClient("beta", port=1, proxy_class=MockProxy) as client:
+        assert cast("MockSocket", cast("MockProxy", client).socket).address == (
+            "beta",
+            1,
+        )
 
 
-def test_peary_client_context_manager_exit_socket_closes(monkeypatch):
+def test_peary_client_context_manager_exit_socket_closes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
 
-    mock_socket = MockSocket(socket.AF_INET, socket.SOCK_STREAM)
-    with peary.PearyClient("", proxy_class=MockProxy):
+    mock_socket = MockSocket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+    with PearyClient("", proxy_class=MockProxy):
         pass
     assert mock_socket.is_connected is False
 
 
-def test_peary_client_context_manager_exit_socket_shutdown(monkeypatch):
+def test_peary_client_context_manager_exit_socket_shutdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
 
-    mock_socket = MockSocket(socket.AF_INET, socket.SOCK_STREAM)
-    with peary.PearyClient("", proxy_class=MockProxy):
+    mock_socket = MockSocket(socket_module.AF_INET, socket_module.SOCK_STREAM)
+    with PearyClient("", proxy_class=MockProxy):
         pass
     assert mock_socket.is_shutdown is True
-    assert mock_socket.how_shutdown == socket.SHUT_RDWR
+    assert mock_socket.how_shutdown == socket_module.SHUT_RDWR
 
 
-def test_peary_client_context_manager_enter_socket_exit_gracefully(monkeypatch):
+def test_peary_client_context_manager_enter_socket_exit_gracefully(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr("socket.socket", MockSocket)
 
     class MockError(Exception):
         """Mock exception for testing purposes."""
 
-    mock_socket = MockSocket(socket.AF_INET, socket.SOCK_STREAM)
+    mock_socket = MockSocket(socket_module.AF_INET, socket_module.SOCK_STREAM)
     try:  # pylint: disable=too-many-try-statements
-        with peary.PearyClient("", proxy_class=MockProxy):
+        with PearyClient("", proxy_class=MockProxy):
             raise MockError  # noqa: TRY301
     except MockError:
         assert mock_socket.is_connected is False
         assert mock_socket.is_shutdown is True
-        assert mock_socket.how_shutdown == socket.SHUT_RDWR
+        assert mock_socket.how_shutdown == socket_module.SHUT_RDWR

@@ -19,11 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Seperated the peary client package from another project to create this package.
 - Increased the verbosity of the python package versions to include both the system
   packaes as well as the virtual environment packages.
+- Added a class argument to the the `add_device` method of the `PearyProxy` class so
+  users can define cusotme interfaces for devices.
+- Python version is now reported with other dependecy versions in the gihub workflow.
+- Added `py.typed` to the source packages to allow for mypy typing across dependencies.
+- Created the supply classes that will be used to access the caribou board supplies.
 ### Changed
 - Updated Nox to resuse the virtual environments accross sessions.
 - Reduced the socket timeout for peary protocol from 10s to 1s.
 - Updated the linter settings by removing unecessary disables and turning on more checks
   for the tests.
+- Udpated the `PearyProxy` tests to removed cluttered redundant code for mocking
+  internal socket communications.
+- Tightened the requirements used to lint all of the tests.
 ### Deprecated
 ### Fixed
 - Fixed bug with peary protocol socket calls where reading multiple buffers would cause

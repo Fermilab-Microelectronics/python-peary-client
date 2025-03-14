@@ -111,15 +111,6 @@ class PearyDevice:
         """Switch off a periphery port."""
         return self._request("switch_off", name)
 
-    def __repr__(self) -> str:
-        """Returns a string representation for the device.
-
-        Returns:
-            String: The string representation of the device instance.
-
-        """
-        return f"{self.name}({self.index})"
-
     def _request(self, cmd: str, *args: str) -> bytes:
         """Send a per-device request to the host and returns response payload.
 
@@ -136,3 +127,12 @@ class PearyDevice:
     def _request_name(self) -> str:
         """Requests the name of the device."""
         return self._request("name").decode("utf-8")
+
+    def __repr__(self) -> str:
+        """Returns a string representation for the device.
+
+        Returns:
+            String: The string representation of the device instance.
+
+        """
+        return f"{self.name}({self.index})"

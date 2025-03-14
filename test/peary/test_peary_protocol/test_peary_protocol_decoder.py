@@ -3,7 +3,7 @@ import pytest
 from peary.peary_protocol import PearyProtocol
 
 
-def test_peary_protocol_decode_payload():
+def test_peary_protocol_decode_payload() -> None:
     assert (
         PearyProtocol.decode(b"\x00\x00\x00\x09\x00\x00\x00\x00alpha").payload
         == b"alpha"
@@ -13,17 +13,18 @@ def test_peary_protocol_decode_payload():
     )
 
 
-def test_peary_protocol_decode_tag():
+def test_peary_protocol_decode_tag() -> None:
     assert PearyProtocol.decode(b"\x00\x00\x00\x04\x00\x00\x00\x00").tag == 0
     assert PearyProtocol.decode(b"\x00\x00\x00\x04\x00\x01\x00\x00").tag == 1
 
 
-def test_peary_protocol_decode_status():
+def test_peary_protocol_decode_status() -> None:
     assert PearyProtocol.decode(b"\x00\x00\x00\x04\x00\x00\x00\x00").status == 0
     assert PearyProtocol.decode(b"\x00\x00\x00\x04\x00\x00\x00\x01").status == 1
 
 
-def test_peary_protocol_decode_insufficient_number_number_of_bytes():
+# TODO(Jeff): increase the number of bytes until it passes
+def test_peary_protocol_decode_insufficient_number_number_of_bytes() -> None:
     with pytest.raises(
         PearyProtocol.DecodeError, match="Insufficent number of bytes: 0"
     ):
@@ -42,7 +43,7 @@ def test_peary_protocol_decode_insufficient_number_number_of_bytes():
         PearyProtocol.decode(b"...")
 
 
-def test_peary_protocol_decode_incorrect_number_of_bytes():
+def test_peary_protocol_decode_incorrect_number_of_bytes() -> None:
     with pytest.raises(PearyProtocol.DecodeError, match="Incorrect number of bytes"):
         PearyProtocol.decode(b"\x00\x00\x00\x03\x00\x00\x00\x00")
     with pytest.raises(PearyProtocol.DecodeError, match="Incorrect number of bytes"):
