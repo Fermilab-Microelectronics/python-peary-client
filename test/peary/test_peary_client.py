@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     from peary.peary_protocol_interface import PearyProtocolInterface
 
+# TODO(Jeff): Rewrite tests using derived classes instead of monkey patching everything.
+
 
 class MockProxy(PearyProxy):
     """Mock proxy class."""

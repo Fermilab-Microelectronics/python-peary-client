@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from socket import socket as socket_type
 
+# TODO(Jeff): Rewrite tests using derived classes instead of monkey patching everything.
+
 
 class MockProtocol(PearyProtocol):
 
