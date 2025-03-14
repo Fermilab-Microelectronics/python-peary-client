@@ -203,7 +203,9 @@ class CaribouBoard(PearyDevice):
             bytes: return value.
 
         """
-        return self._request("car_i2c_write", str(bus), str(comp), str(addr), str(data))
+        return self._request(
+            "car_i2c_write", str(bus.value), str(comp), str(addr), str(data)
+        )
 
     def read_i2c(self, bus: BusI2C, comp: int, addr: int, length: int) -> bytes:
         """Reads from the Caribou board I2C inerface.
@@ -218,5 +220,5 @@ class CaribouBoard(PearyDevice):
             bytes: return value.
         """
         return self._request(
-            "car_i2c_read", str(bus), str(comp), str(addr), str(length)
+            "car_i2c_read", str(bus.value), str(comp), str(addr), str(length)
         )
