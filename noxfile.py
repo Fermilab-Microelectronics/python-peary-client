@@ -65,7 +65,7 @@ def _lint(session):
     session.run("isort", "--check", "--diff", "--color", "--profile", "black", ".")
     session.run("pyprojectsort", "--diff")
     session.run("ruff", "check", "src")
-    session.run("ruff", "check", "test", "--ignore=D,S101,PLR2004")
+    session.run("ruff", "check", "test", "--ignore=D,S101,PLR2004,UP012")
     session.run("pylint", "--enable-all-extensions", "src")
     session.run(
         "pylint",
