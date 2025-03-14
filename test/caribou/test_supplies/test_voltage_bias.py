@@ -1,48 +1,61 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from caribou.voltage_bias import VoltageBias
 
-
-class MockDevice:
-
-    def set_voltage(self, name, value):
-        return (name, value)
-
-    def get_voltage(self, name):
-        return name
-
-    def switch_on(self, name):
-        return name
-
-    def switch_off(self, name):
-        return name
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
-def test_voltage_bias_name():
-    assert VoltageBias("alpha", None).name == "alpha"
-    assert VoltageBias("beta", None).name == "beta"
+def test_voltage_bias_name(mock_device: Callable) -> None:
+    assert VoltageBias("alpha", mock_device()).name == "alpha"
+    assert VoltageBias("beta", mock_device()).name == "beta"
 
 
-def test_voltage_bias_device():
-    assert VoltageBias(None, "alpha").device == "alpha"
-    assert VoltageBias(None, "beta").device == "beta"
+def test_voltage_bias_device(mock_device: Callable) -> None:
+    assert VoltageBias("", device := mock_device()).device is device
+    assert VoltageBias("", device := mock_device()).device is device
 
 
-def test_voltage_bias_set_voltage():
-    assert VoltageBias("alpha", MockDevice()).set_voltage(1) == ("alpha", 1)
-    assert VoltageBias("beta", MockDevice()).set_voltage(2) == ("beta", 2)
+def test_voltage_bias_get_voltage(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [b"1.0", b"2.0"]):
+        assert VoltageBias(
+            name,
+            mock_device(
+                index=index, req=f"device.get_voltage {index} {name}", resp=value
+            ),
+        ).get_voltage() == float(value)
 
 
-def test_voltage_bias_get_voltage():
-    assert VoltageBias("alpha", MockDevice()).get_voltage() == "alpha"
-    assert VoltageBias("beta", MockDevice()).get_voltage() == "beta"
+def test_voltage_bias_set_voltage(mock_device: Callable) -> None:
+    for index, name, value in zip([0, 1], ["alpha", "beta"], [1.0, 2.0]):
+        assert (
+            VoltageBias(
+                name,
+                mock_device(
+                    index=index, req=f"device.set_voltage {index} {name} {value}"
+                ),
+            ).set_voltage(float(value))
+            == b""
+        )
 
 
-def test_voltage_bias_switch_on():
-    assert VoltageBias("alpha", MockDevice()).switch_on() == "alpha"
-    assert VoltageBias("beta", MockDevice()).switch_on() == "beta"
+def test_voltage_bias_switch_on(mock_device: Callable) -> None:
+    for index, name in zip([0, 1], ["alpha", "beta"]):
+        assert (
+            VoltageBias(
+                name, mock_device(index=index, req=f"device.switch_on {index} {name}")
+            ).switch_on()
+            == b""
+        )
 
 
-def test_voltage_bias_switch_off():
-    assert VoltageBias("alpha", MockDevice()).switch_off() == "alpha"
-    assert VoltageBias("beta", MockDevice()).switch_off() == "beta"
+def test_voltage_bias_switch_off(mock_device: Callable) -> None:
+    for index, name in zip([0, 1], ["alpha", "beta"]):
+        assert (
+            VoltageBias(
+                name, mock_device(index=index, req=f"device.switch_off {index} {name}")
+            ).switch_off()
+            == b""
+        )
