@@ -29,18 +29,31 @@ class PearyClient:
         port: int = 12345,
         *,
         proxy_class: type[PearyProxyInterface] = PearyProxy,
+        socket_class: type[socket.socket] = socket.socket,
     ) -> None:
         """Initializes a new peary client.
 
         Args:
             host: Hostname of the remote peary server.
-            port: Port number used by the remote peary server. Defaults to 12345.
-            proxy_class: Class used to construct the proxy. Defaults to PearyProxy.
+            port: Port number of the remote peary server. Defaults to 12345.
+            proxy_class: Class used for the proxy. Defaults to PearyProxy.
+            socket_class: Class used for the socket connection. Defaults to socket.
+
         """
-        self.host = host
-        self.port = port
-        self.proxy_class = proxy_class
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._host = host
+        self._port = port
+        self._proxy_class = proxy_class
+        self._socket = socket_class(socket.AF_INET, socket.SOCK_STREAM)
+
+    @property
+    def proxy_class(self) -> type[PearyProxyInterface]:
+        """Returns the class used to contructuct the proxy."""
+        return self._proxy_class
+
+    @property
+    def socket(self) -> socket.socket:
+        """Returns the socket."""
+        return self._socket
 
     def __enter__(self) -> PearyProxyInterface:
         """Enters a connection with a peary server.
@@ -48,9 +61,18 @@ class PearyClient:
         Returns:
             Self: Returns peary client with new socket.
 
+
+        Raises:
+            PearySockerError: If client cannot not connect to remote host.
+
         """
-        # TODO(Jeff): verify the connection is open
-        self.socket.connect((self.host, self.port))
+        try:
+            self.socket.connect((self._host, self._port))
+        except Exception as e:
+            raise PearyClient.PearySockerError(
+                f"Unable to connect to host {self._host} using port {self._port}."
+            ) from e
+
         return self.proxy_class(self.socket)
 
     def __exit__(self, *_: object) -> None:
