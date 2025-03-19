@@ -10,13 +10,6 @@ if TYPE_CHECKING:
     from .conftest import MockSocket
 
 
-class VerifiedPearyProtocol(PearyProtocol):
-    """An extended PearyProtocol that bypasses compatibility checks."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
-
-
 def test_peary_protocol_request_send_okay(
     monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
@@ -24,7 +17,7 @@ def test_peary_protocol_request_send_okay(
         return len(data)
 
     monkeypatch.setattr(mock_socket, "send", mock_send)
-    VerifiedPearyProtocol(mock_socket()).request("")
+    PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")
 
 
 def test_peary_protocol_request_send_error(
@@ -37,4 +30,4 @@ def test_peary_protocol_request_send_error(
     with pytest.raises(
         PearyProtocol.RequestSendError, match="Failed to send request:*"
     ):
-        VerifiedPearyProtocol(mock_socket()).request("")
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")

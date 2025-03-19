@@ -13,13 +13,6 @@ if TYPE_CHECKING:
     from .conftest import MockSocket
 
 
-class VerifiedPearyProtocol(PearyProtocol):
-    """An extended PearyProtocol that bypasses compatibility checks."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
-
-
 def test_peary_protocol_request_recieved_response_buffer_oversized(
     monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
@@ -30,7 +23,7 @@ def test_peary_protocol_request_recieved_response_buffer_oversized(
 
     monkeypatch.setattr(mock_socket, "recv", mock_recv)
     assert (
-        VerifiedPearyProtocol(mock_socket()).request(
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
             "alpha", buffer_size=len(encoded_message) + 1
         )
         == b"alpha"
@@ -51,7 +44,7 @@ def test_peary_protocol_request_recieved_response_buffer_equalsized(
     monkeypatch.setattr(select, "select", mock_select)
     monkeypatch.setattr(mock_socket, "recv", mock_recv)
     assert (
-        VerifiedPearyProtocol(mock_socket()).request(
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
             "alpha", buffer_size=len(encoded_message)
         )
         == b"alpha"
@@ -79,7 +72,10 @@ def test_peary_protocol_request_recieved_response_buffer_undersized(
     monkeypatch.setattr(select, "select", mock_select)
     monkeypatch.setattr(mock_socket, "recv", mock_recv)
     assert (
-        VerifiedPearyProtocol(mock_socket()).request("alpha", buffer_size=1) == b"alpha"
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
+            "alpha", buffer_size=1
+        )
+        == b"alpha"
     )
 
 
@@ -93,4 +89,4 @@ def test_peary_protocol_request_receive_error(
     with pytest.raises(
         PearyProtocol.ResponseReceiveError, match="Failed to receive response."
     ):
-        VerifiedPearyProtocol(mock_socket()).request("")
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")

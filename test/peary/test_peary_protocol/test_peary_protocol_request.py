@@ -10,13 +10,6 @@ if TYPE_CHECKING:
     from .conftest import MockSocket
 
 
-class VerifiedPearyProtocol(PearyProtocol):
-    """An extended PearyProtocol that bypasses compatibility checks."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
-
-
 def test_peary_protocol_request_send_message_without_args(
     monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
 ) -> None:
@@ -26,7 +19,9 @@ def test_peary_protocol_request_send_message_without_args(
         return len(data)
 
     monkeypatch.setattr(mock_socket, "send", mock_send)
-    VerifiedPearyProtocol(mock_socket()).request("alpha")
+    PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
+        "alpha"
+    )
 
 
 def test_peary_protocol_request_send_message_with_args(
@@ -39,7 +34,9 @@ def test_peary_protocol_request_send_message_with_args(
         return len(data)
 
     monkeypatch.setattr(mock_socket, "send", mock_send)
-    VerifiedPearyProtocol(mock_socket()).request("alpha", "beta", "gamma")
+    PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
+        "alpha", "beta", "gamma"
+    )
 
 
 def test_peary_protocol_request_response_status_okay(
@@ -49,7 +46,7 @@ def test_peary_protocol_request_response_status_okay(
         return PearyProtocol.encode(b"", 1, PearyProtocol.STATUS_OK)
 
     monkeypatch.setattr(mock_socket, "recv", mock_recv)
-    VerifiedPearyProtocol(mock_socket()).request("")
+    PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")
 
 
 def test_peary_protocol_request_response_status_error(
@@ -62,7 +59,7 @@ def test_peary_protocol_request_response_status_error(
     with pytest.raises(
         PearyProtocol.ResponseStatusError, match="Failed response status 1*"
     ):
-        VerifiedPearyProtocol(mock_socket()).request("")
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")
 
 
 def test_peary_protocol_request_response_sequence_okay(
@@ -78,7 +75,7 @@ def test_peary_protocol_request_response_sequence_okay(
         return next(mock_recv_generator)
 
     monkeypatch.setattr(mock_socket, "recv", mock_recv)
-    protocol = VerifiedPearyProtocol(mock_socket())
+    protocol = PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE)
     for _ in range(num_requests):
         protocol.request("")
 
@@ -95,4 +92,4 @@ def test_peary_protocol_request_response_sequence_error(
         PearyProtocol.ResponseSequenceError,
         match="Recieved out of order repsonse from*",
     ):
-        VerifiedPearyProtocol(mock_socket()).request("")
+        PearyProtocol(mock_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")
