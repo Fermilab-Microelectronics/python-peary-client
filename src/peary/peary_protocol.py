@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import select
 import struct
+from enum import Flag, auto
 from typing import TYPE_CHECKING, NamedTuple
 
 from peary.peary_protocol_interface import PearyProtocolInterface
@@ -39,17 +40,30 @@ class PearyProtocol(PearyProtocolInterface):
     class VersionError(Exception):
         """Exception for incompatible client and server protocols."""
 
+    class Checks(Flag):
+        """Collection of protocol checks that can be performed."""
+
+        CHECK_NONE = auto()
+        CHECK_VERSION = auto()
+
     STATUS_OK = 0
     STRUCT_HEADER = struct.Struct("!HH")
     STRUCT_LENGTH = struct.Struct("!L")
     VERSION = b"1"
 
-    def __init__(self, socket: socket_type, timeout: int = 1) -> None:
+    def __init__(
+        self,
+        socket: socket_type,
+        *,
+        timeout: int = 1,
+        checks: Checks = Checks.CHECK_VERSION,
+    ) -> None:
         """Initializes a new peary proxy.
 
         Args:
             socket: Socket connected to the remote peary server.
             timeout: Socket timeout value in seconds. Defaults to 1.
+            checks: Checks performed during initialization. Defaults to CHECK_VERSION.
 
         Raises:
             VersionError: If protocol version doesn match with remote host.
@@ -59,7 +73,8 @@ class PearyProtocol(PearyProtocolInterface):
         self._socket = socket
 
         self._socket.settimeout(timeout)
-        self._verify_compatible_version()
+        if PearyProtocol.Checks.CHECK_VERSION in checks:
+            self._verify_compatible_version()
 
     @staticmethod
     def encode(payload: bytes, tag: int, status: int) -> bytes:
