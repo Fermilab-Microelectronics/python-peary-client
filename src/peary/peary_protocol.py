@@ -36,7 +36,7 @@ class PearyProtocol(PearyProtocolInterface):
     class RequestSendError(Exception):
         """Exception for requests failing to send."""
 
-    class IncompatibleProtocolError(Exception):
+    class VersionError(Exception):
         """Exception for incompatible client and server protocols."""
 
     STATUS_OK = 0
@@ -52,7 +52,7 @@ class PearyProtocol(PearyProtocolInterface):
             timeout: Socket timeout value in seconds. Defaults to 1.
 
         Raises:
-            IncompatibleProtocolError: If protocol version numbers do not match
+            VersionError: If protocol version doesn match with remote host.
 
         """
         self._tag: int = 0
@@ -190,10 +190,10 @@ class PearyProtocol(PearyProtocolInterface):
         """Verify the remote version is suppoted by this protocol.
 
         Raises:
-            IncompatibleProtocolError: If versions are incompatible.
+            VersionError: If versions are incompatible.
 
         """
         if (version := self.request("protocol_version")) != self.VERSION:
-            raise PearyProtocol.IncompatibleProtocolError(
+            raise PearyProtocol.VersionError(
                 f"Unsupported protocol version: {version!r}"
             )
