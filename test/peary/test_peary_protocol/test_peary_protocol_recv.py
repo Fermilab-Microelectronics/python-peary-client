@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import select
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,40 +13,35 @@ if TYPE_CHECKING:
 
 def test_peary_protocol_recv_buffer_oversized(mock_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
-    fake_socket = mock_socket(mock_recv=lambda _: encoded_message)
-    assert (
-        PearyProtocol(fake_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
-            "alpha", buffer_size=len(encoded_message) + 1
+    with mock_socket(mock_recv=lambda _: encoded_message) as socket_class:
+        assert (
+            PearyProtocol(
+                socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
+            ).request("alpha", buffer_size=len(encoded_message) + 1)
+            == b"alpha"
         )
-        == b"alpha"
-    )
 
 
-def test_peary_protocol_recv_buffer_equalsized(
-    monkeypatch: pytest.MonkeyPatch, mock_socket: Callable
-) -> None:
+def test_peary_protocol_recv_buffer_equalsized(mock_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
-    fake_socket = mock_socket(mock_recv=lambda _: encoded_message)
-
-    def mock_select(*_: list[socket_type]) -> tuple[list, ...]:
-        return [], [], []
-
-    monkeypatch.setattr(select, "select", mock_select)
-    assert (
-        PearyProtocol(fake_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
-            "alpha", buffer_size=len(encoded_message)
+    with mock_socket(
+        mock_recv=lambda _: encoded_message, mock_select=lambda *_: ([], [], [])
+    ) as socket_class:
+        assert (
+            PearyProtocol(
+                socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
+            ).request("alpha", buffer_size=len(encoded_message))
+            == b"alpha"
         )
-        == b"alpha"
-    )
 
 
-def test_peary_protocol_recv_buffer_undersized(
-    monkeypatch: pytest.MonkeyPatch, mock_socket: Callable
-) -> None:
+def test_peary_protocol_recv_buffer_undersized(mock_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
-    mock_select_generator = iter(range(len(encoded_message)))
     mock_recv_generator = iter(bytes([ii]) for ii in encoded_message)
-    fake_socket = mock_socket(mock_recv=lambda _: next(mock_recv_generator))
+    mock_select_generator = iter(range(len(encoded_message)))
+
+    def mock_recv(_: int) -> bytes:
+        return next(mock_recv_generator)
 
     def mock_select(
         rlist: list[socket_type], *_: list[socket_type]
@@ -57,19 +51,20 @@ def test_peary_protocol_recv_buffer_undersized(
         else:
             return [], [], []
 
-    monkeypatch.setattr(select, "select", mock_select)
-    assert (
-        PearyProtocol(fake_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request(
-            "alpha", buffer_size=1
+    with mock_socket(mock_recv=mock_recv, mock_select=mock_select) as socket_class:
+        assert (
+            PearyProtocol(
+                socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
+            ).request("alpha", buffer_size=1)
+            == b"alpha"
         )
-        == b"alpha"
-    )
 
 
 def test_peary_protocol_recv_error(mock_socket: Callable) -> None:
-    fake_socket = mock_socket(mock_recv=lambda _: b"")
-
-    with pytest.raises(
-        PearyProtocol.ResponseReceiveError, match="Failed to receive response."
-    ):
-        PearyProtocol(fake_socket(), checks=PearyProtocol.Checks.CHECK_NONE).request("")
+    with mock_socket(mock_recv=lambda _: b"") as socket_class:  # noqa: SIM117
+        with pytest.raises(
+            PearyProtocol.ResponseReceiveError, match="Failed to receive response."
+        ):
+            PearyProtocol(
+                socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
+            ).request("")

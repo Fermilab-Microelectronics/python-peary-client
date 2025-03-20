@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import select
 import socket as socket_module
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, cast
 
 import pytest
@@ -8,7 +10,8 @@ import pytest
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
+    from socket import socket as socket_type
 
     from typing_extensions import Buffer
 
@@ -18,15 +21,19 @@ class MockSocketInterface(socket_module.socket):
 
 
 @pytest.fixture(name="mock_socket")
-def _mock_socket() -> Callable:
+def _mock_socket(monkeypatch: pytest.MonkeyPatch) -> Callable:
 
+    @contextmanager
     def _patched_mock_socket(
         # pylint: disable-next=unnecessary-lambda
         mock_send: Callable[[bytes], int] = lambda _: len(_),
         mock_recv: Callable[[int], bytes] = lambda _: PearyProtocol.encode(
             b"", 1, PearyProtocol.STATUS_OK
         ),
-    ) -> type[MockSocketInterface]:
+        mock_select: Callable[
+            [list[socket_type]], tuple[list, list, list]
+        ] = lambda *_: ([], [], []),
+    ) -> Generator[type[MockSocketInterface]]:
 
         class MockSocket(MockSocketInterface):
 
@@ -41,6 +48,8 @@ def _mock_socket() -> Callable:
             def settimeout(self, value: float | None = None) -> None:
                 MockSocket.timeout = value
 
-        return MockSocket
+        with monkeypatch.context() as m:
+            m.setattr(select, "select", mock_select)
+            yield MockSocket
 
     return _patched_mock_socket

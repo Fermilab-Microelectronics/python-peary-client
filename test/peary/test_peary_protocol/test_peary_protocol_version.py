@@ -9,6 +9,8 @@ from peary.peary_protocol import PearyProtocol
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+# ruff: noqa: SIM117
+
 
 def test_peary_protocol_version_request_message(mock_socket: Callable) -> None:
 
@@ -20,7 +22,8 @@ def test_peary_protocol_version_request_message(mock_socket: Callable) -> None:
             assert msg == "protocol_version"
             return b"1"
 
-    MockProtocol(mock_socket())
+    with mock_socket() as socket_class:
+        MockProtocol(socket_class())
 
 
 def test_peary_protocol_version_supported(mock_socket: Callable) -> None:
@@ -32,7 +35,8 @@ def test_peary_protocol_version_supported(mock_socket: Callable) -> None:
         ) -> bytes:
             return b"1"
 
-    MockProtocol(mock_socket())
+    with mock_socket() as socket_class:
+        MockProtocol(socket_class())
 
 
 def test_peary_protocol_version_unsupported(mock_socket: Callable) -> None:
@@ -44,7 +48,8 @@ def test_peary_protocol_version_unsupported(mock_socket: Callable) -> None:
         ) -> bytes:
             return b"0"
 
-    with pytest.raises(
-        PearyProtocol.VersionError, match="Unsupported protocol version: b'0'"
-    ):
-        MockProtocol(mock_socket())
+    with mock_socket() as socket_class:
+        with pytest.raises(
+            PearyProtocol.VersionError, match="Unsupported protocol version: b'0'"
+        ):
+            MockProtocol(socket_class())
