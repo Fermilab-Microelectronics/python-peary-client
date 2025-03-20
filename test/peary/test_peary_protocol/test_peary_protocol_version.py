@@ -7,10 +7,10 @@ import pytest
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from .conftest import MockSocket
+    from collections.abc import Callable
 
 
-def test_peary_protocol_version_request_message(mock_socket: type[MockSocket]) -> None:
+def test_peary_protocol_version_request_message(mock_socket: Callable) -> None:
 
     class MockProtocol(PearyProtocol):
 
@@ -23,7 +23,7 @@ def test_peary_protocol_version_request_message(mock_socket: type[MockSocket]) -
     MockProtocol(mock_socket())
 
 
-def test_peary_protocol_version_supported(mock_socket: type[MockSocket]) -> None:
+def test_peary_protocol_version_supported(mock_socket: Callable) -> None:
 
     class MockProtocol(PearyProtocol):
 
@@ -35,7 +35,7 @@ def test_peary_protocol_version_supported(mock_socket: type[MockSocket]) -> None
     MockProtocol(mock_socket())
 
 
-def test_peary_protocol_version_unsupported(mock_socket: type[MockSocket]) -> None:
+def test_peary_protocol_version_unsupported(mock_socket: Callable) -> None:
 
     class MockProtocol(PearyProtocol):
 
