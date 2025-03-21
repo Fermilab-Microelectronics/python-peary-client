@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     from socket import socket as socket_type
 
 
-def test_peary_protocol_recv_buffer_oversized(mock_socket: Callable) -> None:
+def test_peary_protocol_recv_buffer_oversized(patch_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
-    with mock_socket(mock_recv=lambda _: encoded_message) as socket_class:
+    with patch_socket(mock_recv=lambda _: encoded_message) as socket_class:
         assert (
             PearyProtocol(
                 socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
@@ -22,9 +22,9 @@ def test_peary_protocol_recv_buffer_oversized(mock_socket: Callable) -> None:
         )
 
 
-def test_peary_protocol_recv_buffer_equalsized(mock_socket: Callable) -> None:
+def test_peary_protocol_recv_buffer_equalsized(patch_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
-    with mock_socket(
+    with patch_socket(
         mock_recv=lambda _: encoded_message, mock_select=lambda *_: ([], [], [])
     ) as socket_class:
         assert (
@@ -35,7 +35,7 @@ def test_peary_protocol_recv_buffer_equalsized(mock_socket: Callable) -> None:
         )
 
 
-def test_peary_protocol_recv_buffer_undersized(mock_socket: Callable) -> None:
+def test_peary_protocol_recv_buffer_undersized(patch_socket: Callable) -> None:
     encoded_message = PearyProtocol.encode(b"alpha", 1, PearyProtocol.STATUS_OK)
     mock_recv_generator = iter(bytes([ii]) for ii in encoded_message)
     mock_select_generator = iter(range(len(encoded_message)))
@@ -51,7 +51,7 @@ def test_peary_protocol_recv_buffer_undersized(mock_socket: Callable) -> None:
         else:
             return [], [], []
 
-    with mock_socket(mock_recv=mock_recv, mock_select=mock_select) as socket_class:
+    with patch_socket(mock_recv=mock_recv, mock_select=mock_select) as socket_class:
         assert (
             PearyProtocol(
                 socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
@@ -60,8 +60,8 @@ def test_peary_protocol_recv_buffer_undersized(mock_socket: Callable) -> None:
         )
 
 
-def test_peary_protocol_recv_error(mock_socket: Callable) -> None:
-    with mock_socket(mock_recv=lambda _: b"") as socket_class:
+def test_peary_protocol_recv_error(patch_socket: Callable) -> None:
+    with patch_socket(mock_recv=lambda _: b"") as socket_class:
         with pytest.raises(
             PearyProtocol.ResponseReceiveError, match="Failed to receive response."
         ):

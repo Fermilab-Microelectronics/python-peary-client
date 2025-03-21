@@ -10,16 +10,16 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-def test_peary_protocol_send_okay(mock_socket: Callable) -> None:
+def test_peary_protocol_send_okay(patch_socket: Callable) -> None:
     # pylint: disable-next=unnecessary-lambda
-    with mock_socket(mock_send=lambda _: len(_)) as socket_class:
+    with patch_socket(mock_send=lambda _: len(_)) as socket_class:
         PearyProtocol(socket_class(), checks=PearyProtocol.Checks.CHECK_NONE).request(
             ""
         )
 
 
-def test_peary_protocol_send_error(mock_socket: Callable) -> None:
-    with mock_socket(mock_send=lambda _: len(_) - 1) as socket_class:
+def test_peary_protocol_send_error(patch_socket: Callable) -> None:
+    with patch_socket(mock_send=lambda _: len(_) - 1) as socket_class:
         with pytest.raises(
             PearyProtocol.RequestSendError, match="Failed to send request:*"
         ):
