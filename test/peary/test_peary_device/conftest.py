@@ -20,14 +20,14 @@ class MockPearyProtocol(PearyProtocol):
     ) -> bytes:
         return " ".join([msg, *args]).encode("utf-8")
 
-    def _verify_compatible_version(self) -> None:
-        pass
-
 
 @pytest.fixture(name="device")
 def _device() -> Callable:
 
     def _initialize_device(index: int) -> PearyDevice:
-        return PearyDevice(index, socket.socket(), MockPearyProtocol)
+        return PearyDevice(
+            index,
+            MockPearyProtocol(socket.socket(), checks=PearyProtocol.Checks.CHECK_NONE),
+        )
 
     return _initialize_device
