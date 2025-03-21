@@ -61,7 +61,7 @@ def test_peary_protocol_recv_buffer_undersized(mock_socket: Callable) -> None:
 
 
 def test_peary_protocol_recv_error(mock_socket: Callable) -> None:
-    with mock_socket(mock_recv=lambda _: b"") as socket_class:  # noqa: SIM117
+    with mock_socket(mock_recv=lambda _: b"") as socket_class:
         with pytest.raises(
             PearyProtocol.ResponseReceiveError, match="Failed to receive response."
         ):

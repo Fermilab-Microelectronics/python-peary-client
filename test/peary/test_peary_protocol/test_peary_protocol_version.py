@@ -9,8 +9,6 @@ from peary.peary_protocol import PearyProtocol
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-# ruff: noqa: SIM117
-
 
 def test_peary_protocol_version_request_message(mock_socket: Callable) -> None:
 
