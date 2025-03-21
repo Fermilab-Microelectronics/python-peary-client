@@ -2,33 +2,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from peary.peary_protocol import PearyProtocol
-
 if TYPE_CHECKING:
-    from socket import socket as socket_type
-
-    from peary.peary_protocol_interface import PearyProtocolInterface
+    from peary.peary_protocol import PearyProtocol
 
 
 class PearyDevice:
     """A Peary device."""
 
-    def __init__(
-        self,
-        index: int,
-        socket: socket_type,
-        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
-    ) -> None:
+    def __init__(self, index: int, protocol: PearyProtocol) -> None:
         """Initializes a remote peary device.
 
         Args:
-            socket: Socket connected to the remote peary server.
-            protocol_class: Protocol used during communication with the peary server.
             index: Numerical identifier for the device.
+            protocol: Protocol connected to the remote peary server.
 
         """
         self._index = index
-        self._protocol = protocol_class(socket)
+        self._protocol = protocol
         self._name = self._request_name()
 
     @property
