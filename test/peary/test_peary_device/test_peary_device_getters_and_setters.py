@@ -15,9 +15,6 @@ if TYPE_CHECKING:
 class MockPearyDevice(PearyDevice):
     """A Mock Peary Protocol."""
 
-    def _request_name(self) -> str:
-        return ""
-
 
 @pytest.fixture(name="mock_device")
 def _mock_device() -> Callable:
@@ -33,10 +30,10 @@ def _mock_device() -> Callable:
                 assert " ".join([msg, *args]) == req
                 return resp
 
-            def _verify_compatible_version(self) -> None:
-                pass
-
-        return MockPearyDevice(index, socket.socket(), MockPearyProtocol)
+        return MockPearyDevice(
+            index,
+            MockPearyProtocol(socket.socket(), checks=PearyProtocol.Checks.CHECK_NONE),
+        )
 
     return _mock_device
 
