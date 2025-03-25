@@ -4,15 +4,9 @@ import abc
 from typing import TYPE_CHECKING
 
 from peary.peary_device import PearyDevice
-from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from socket import socket as socket_type
-
-    from peary.peary_protocol_interface import PearyProtocolInterface
-
-
-# TODO(Jeff): Getter should throw and exception if something is not found
+    from peary.peary_protocol import PearyProtocol
 
 
 class PearyProxyInterface(abc.ABC):
@@ -27,16 +21,11 @@ class PearyProxyInterface(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __init__(
-        self,
-        socket: socket_type,
-        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
-    ) -> None:
+    def __init__(self, protocol: PearyProtocol) -> None:
         """Initializes a new peary proxy.
 
         Args:
-            socket: Socket connected to the remote peary server.
-            protocol_class: Protocol used during communication with the peary server.
+            protocol: Protocol connected to the remote peary server.
 
         """
 
@@ -47,7 +36,7 @@ class PearyProxyInterface(abc.ABC):
     @abc.abstractmethod
     def add_device(
         self, name: str, device_class: type[PearyDevice] = PearyDevice
-    ) -> type[PearyDevice]:
+    ) -> PearyDevice:
         """Add a new device.
 
         Args:
@@ -55,19 +44,19 @@ class PearyProxyInterface(abc.ABC):
             device_class: Class used to construct the device. Defaults to PearyDevice.
 
         Returns:
-            type[PearyDevice]: Instance of the added device.
+            PearyDevice: Instance of the added device.
 
         """
 
     @abc.abstractmethod
-    def get_device(self, name: str) -> type[PearyDevice]:
+    def get_device(self, name: str) -> PearyDevice:
         """Get an existing device.
 
         Args:
             name: Name of device to get.
 
         Returns:
-            type[PearyDevice]: Instance of the device.
+            PearyDevice: Instance of the device.
 
         """
 

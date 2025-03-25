@@ -6,8 +6,6 @@ from peary.peary_device import PearyDevice
 from peary.peary_proxy_interface import PearyProxyInterface
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from peary.peary_protocol import PearyProtocol
 
 
@@ -27,10 +25,7 @@ class PearyProxy(PearyProxyInterface):
             protocol: Protocol connected to the remote peary server.
 
         """
-        # TODO(Jeff): Figure out why annotation using type[BaseClass] gives type errors
-        #       when calling add device. Will use Any for now.
-        #       ex: self._devices: dict[str, type[PearyDevice]] = {}
-        self._devices: dict[str, Any] = {}
+        self._devices: dict[str, PearyDevice] = {}
         self._protocol = protocol
 
     def keep_alive(self) -> bytes:
@@ -39,7 +34,7 @@ class PearyProxy(PearyProxyInterface):
 
     def add_device(
         self, name: str, device_class: type[PearyDevice] = PearyDevice
-    ) -> type[PearyDevice]:
+    ) -> PearyDevice:
         """Add a new device.
 
         Args:
@@ -47,7 +42,7 @@ class PearyProxy(PearyProxyInterface):
             device_class: Class used to construct the device. Defaults to PearyDevice.
 
         Returns:
-            type[PearyDevice]: Instance of the added device.
+            PearyDevice: Instance of the added device.
 
         Raises:
             PearyProxyAddDeviceError: If device already exists
@@ -59,7 +54,7 @@ class PearyProxy(PearyProxyInterface):
         self._devices[name] = device_class(index, self._protocol)
         return self._devices[name]
 
-    def get_device(self, name: str) -> type[PearyDevice]:
+    def get_device(self, name: str) -> PearyDevice:
         """Get an existing device.
 
         Args:
