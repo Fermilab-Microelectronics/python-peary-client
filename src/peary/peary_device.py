@@ -38,7 +38,7 @@ class PearyDevice:
         """Returns the connected protocol."""
         return self._protocol
 
-    # fixed device functionality is added explicitely with
+    # fixed device functionality is added explicitly with
     # additional return value decoding where appropriate
     def power_on(self) -> bytes:
         """Power on the device."""
