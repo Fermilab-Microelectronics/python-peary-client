@@ -33,6 +33,11 @@ class PearyDevice:
             self._name = self._request_name()
         return self._name
 
+    @property
+    def protocol(self) -> PearyProtocol:
+        """Returns the connected protocol."""
+        return self._protocol
+
     # fixed device functionality is added explicitely with
     # additional return value decoding where appropriate
     def power_on(self) -> bytes:
