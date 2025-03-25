@@ -20,11 +20,11 @@ class MockSocketInterface(socket_module.socket):
     timeout: float | None = None
 
 
-@pytest.fixture(name="patch_socket")
-def _patch_socket(monkeypatch: pytest.MonkeyPatch) -> Callable:
+@pytest.fixture(name="socket_class_context")
+def _socket_class_context(monkeypatch: pytest.MonkeyPatch) -> Callable:
 
     @contextmanager
-    def _patch_socket_context(
+    def _socket_class_contextmanager(
         # pylint: disable-next=unnecessary-lambda
         mock_send: Callable[[bytes], int] = lambda _: len(_),
         mock_recv: Callable[[int], bytes] = lambda _: PearyProtocol.encode(
@@ -52,4 +52,4 @@ def _patch_socket(monkeypatch: pytest.MonkeyPatch) -> Callable:
             m.setattr(select, "select", mock_select)
             yield MockSocket
 
-    return _patch_socket_context
+    return _socket_class_contextmanager
