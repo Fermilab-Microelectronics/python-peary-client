@@ -12,22 +12,28 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-class MockPearyProtocol(PearyProtocol):
-    """A Mock Peary Protocol."""
+@pytest.fixture(name="mock_device")
+def _mock_device() -> Callable:
+    def _customize_mock_device_request(
+        index: int, *, req: str | None = None, resp: bytes | None = None
+    ) -> PearyDevice:
 
-    def request(
-        self, msg: str, *args: str, buffer_size: int = 4096  # noqa: ARG002
-    ) -> bytes:
-        return " ".join([msg, *args]).encode("utf-8")
+        class MockPearyProtocol(PearyProtocol):
+            """A Mock Peary Protocol."""
 
+            def request(
+                self, msg: str, *args: str, buffer_size: int = 4096  # noqa: ARG002
+            ) -> bytes:
+                if req:
+                    assert " ".join([msg, *args]) == req
+                if resp:
+                    return resp
+                else:
+                    return " ".join([msg, *args]).encode("utf-8")
 
-@pytest.fixture(name="device")
-def _device() -> Callable:
-
-    def _initialize_device(index: int) -> PearyDevice:
         return PearyDevice(
             index,
             MockPearyProtocol(socket.socket(), checks=PearyProtocol.Checks.CHECK_NONE),
         )
 
-    return _initialize_device
+    return _customize_mock_device_request
