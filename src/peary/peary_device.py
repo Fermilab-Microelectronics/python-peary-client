@@ -19,7 +19,7 @@ class PearyDevice:
         """
         self._index = index
         self._protocol = protocol
-        self._name = self._request_name()
+        self._name: None | str = None
 
     @property
     def index(self) -> int:
@@ -29,6 +29,8 @@ class PearyDevice:
     @property
     def name(self) -> str:
         """Returns the device type."""
+        if self._name is None:
+            self._name = self._request_name()
         return self._name
 
     # fixed device functionality is added explicitely with
