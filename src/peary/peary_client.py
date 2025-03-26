@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import socket
-from typing import TYPE_CHECKING
+import socket as socket_module
 
+from peary.peary_protocol import PearyProtocol
 from peary.peary_proxy import PearyProxy
-
-if TYPE_CHECKING:
-    from peary.peary_proxy_interface import PearyProxyInterface
 
 
 class PearyClient:
@@ -28,39 +25,33 @@ class PearyClient:
         host: str,
         port: int = 12345,
         *,
-        proxy_class: type[PearyProxyInterface] = PearyProxy,
-        socket_class: type[socket.socket] = socket.socket,
+        protocol_class: type[PearyProtocol] = PearyProtocol,
+        socket_class: type[socket_module.socket] = socket_module.socket,
     ) -> None:
         """Initializes a new peary client.
 
         Args:
             host: Hostname of the remote peary server.
             port: Port number of the remote peary server. Defaults to 12345.
-            proxy_class: Class used for the proxy. Defaults to PearyProxy.
-            socket_class: Class used for the socket connection. Defaults to socket.
+            socket_class: Class used for the remote socket. Defaults to socket.
+            protocol_class: Class used for the protocol. Defaults to PearyProtocol.
 
         """
         self._host = host
         self._port = port
-        self._proxy_class = proxy_class
-        self._socket = socket_class(socket.AF_INET, socket.SOCK_STREAM)
+        self._protocol_class = protocol_class
+        self._socket = socket_class(socket_module.AF_INET, socket_module.SOCK_STREAM)
 
     @property
-    def proxy_class(self) -> type[PearyProxyInterface]:
-        """Returns the class used to contructuct the proxy."""
-        return self._proxy_class
-
-    @property
-    def socket(self) -> socket.socket:
+    def socket(self) -> socket_module.socket:
         """Returns the socket."""
         return self._socket
 
-    def __enter__(self) -> PearyProxyInterface:
+    def __enter__(self) -> PearyProxy:
         """Enters a connection with a peary server.
 
         Returns:
             Self: Returns peary client with new socket.
-
 
         Raises:
             PearySockerError: If client cannot not connect to remote host.
@@ -73,7 +64,7 @@ class PearyClient:
                 f"Unable to connect to host {self._host} using port {self._port}."
             ) from e
 
-        return self.proxy_class(self.socket)
+        return PearyProxy(self._protocol_class(self.socket))
 
     def __exit__(self, *_: object) -> None:
         """Exits a context block.
@@ -82,5 +73,5 @@ class PearyClient:
             _: Catches the usued arguments required for the __exit__ function.
 
         """
-        self.socket.shutdown(socket.SHUT_RDWR)
+        self.socket.shutdown(socket_module.SHUT_RDWR)
         self.socket.close()
