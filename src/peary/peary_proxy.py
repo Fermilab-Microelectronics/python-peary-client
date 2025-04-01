@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from peary.peary_device import PearyDevice
-from peary.peary_proxy_interface import PearyProxyInterface
 
 if TYPE_CHECKING:
     from peary.peary_protocol import PearyProtocol
 
 
-class PearyProxy(PearyProxyInterface):
+class PearyProxy:
     """Proxy for the remote peary server."""
 
     class PearyProxyAddDeviceError(Exception):

@@ -5,8 +5,6 @@ import struct
 from enum import Flag, auto
 from typing import TYPE_CHECKING, NamedTuple
 
-from peary.peary_protocol_interface import PearyProtocolInterface
-
 if TYPE_CHECKING:
     from socket import socket as socket_type
 
@@ -19,7 +17,7 @@ class DecodedBytes(NamedTuple):
     status: int
 
 
-class PearyProtocol(PearyProtocolInterface):
+class PearyProtocol:
     """Protocol for encoding and decoding communication with a remote peary server."""
 
     class DecodeError(Exception):

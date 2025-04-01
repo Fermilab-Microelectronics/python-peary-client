@@ -34,10 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Udpated the `PearyProxy` tests to removed cluttered redundant code for mocking
   internal socket communications.
 - Tightened the requirements used to lint all of the tests.
+- Rewrote the peary classes to accept protocol object directly instead of contructing
+  the protocol from a socket.
+- Removed the unecessary abstract interface classes.
 ### Deprecated
 ### Fixed
 - Fixed bug with peary protocol socket calls where reading multiple buffers would cause
   the socket to hang due to incorrect usage of non-blocking operations.
 - Added missing command line option to isolate python in github workflow:
   `python -m pip install --upgrade pip` -> `python -Im pip install --upgrade pip`
+- Rewrote the class tests to use derived classes instead of monkeypatching everything.
 ### Security
