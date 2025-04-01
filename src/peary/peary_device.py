@@ -2,34 +2,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from peary.peary_protocol import PearyProtocol
-
 if TYPE_CHECKING:
-    from socket import socket as socket_type
-
-    from peary.peary_protocol_interface import PearyProtocolInterface
+    from peary.peary_protocol import PearyProtocol
 
 
 class PearyDevice:
     """A Peary device."""
 
-    def __init__(
-        self,
-        index: int,
-        socket: socket_type,
-        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
-    ) -> None:
+    def __init__(self, index: int, protocol: PearyProtocol) -> None:
         """Initializes a remote peary device.
 
         Args:
-            socket: Socket connected to the remote peary server.
-            protocol_class: Protocol used during communication with the peary server.
             index: Numerical identifier for the device.
+            protocol: Protocol connected to the remote peary server.
 
         """
         self._index = index
-        self._protocol = protocol_class(socket)
-        self._name = self._request_name()
+        self._protocol = protocol
+        self._name: None | str = None
 
     @property
     def index(self) -> int:
@@ -39,9 +29,16 @@ class PearyDevice:
     @property
     def name(self) -> str:
         """Returns the device type."""
+        if self._name is None:
+            self._name = self._request_name()
         return self._name
 
-    # fixed device functionality is added explicitely with
+    @property
+    def protocol(self) -> PearyProtocol:
+        """Returns the connected protocol."""
+        return self._protocol
+
+    # fixed device functionality is added explicitly with
     # additional return value decoding where appropriate
     def power_on(self) -> bytes:
         """Power on the device."""

@@ -7,34 +7,22 @@ import pytest
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from .conftest import MockSocket
+    from collections.abc import Callable
 
 
-class VerifiedPearyProtocol(PearyProtocol):
-    """An extended PearyProtocol that bypasses compatibility checks."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
-
-
-def test_peary_protocol_request_send_okay(
-    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
-) -> None:
-    def mock_send(_self: PearyProtocol, data: bytes) -> int:
-        return len(data)
-
-    monkeypatch.setattr(mock_socket, "send", mock_send)
-    VerifiedPearyProtocol(mock_socket()).request("")
+def test_peary_protocol_send_okay(socket_class_context: Callable) -> None:
+    # pylint: disable-next=unnecessary-lambda
+    with socket_class_context(mock_send=lambda _: len(_)) as socket_class:
+        PearyProtocol(socket_class(), checks=PearyProtocol.Checks.CHECK_NONE).request(
+            ""
+        )
 
 
-def test_peary_protocol_request_send_error(
-    monkeypatch: pytest.MonkeyPatch, mock_socket: type[MockSocket]
-) -> None:
-    def mock_send(_self: PearyProtocol, data: bytes) -> int:
-        return len(data) - 1
-
-    monkeypatch.setattr(mock_socket, "send", mock_send)
-    with pytest.raises(
-        PearyProtocol.RequestSendError, match="Failed to send request:*"
-    ):
-        VerifiedPearyProtocol(mock_socket()).request("")
+def test_peary_protocol_send_error(socket_class_context: Callable) -> None:
+    with socket_class_context(mock_send=lambda _: len(_) - 1) as socket_class:
+        with pytest.raises(
+            PearyProtocol.RequestSendError, match="Failed to send request:*"
+        ):
+            PearyProtocol(
+                socket_class(), checks=PearyProtocol.Checks.CHECK_NONE
+            ).request("")

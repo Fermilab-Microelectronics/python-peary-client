@@ -23,7 +23,6 @@ def test_peary_protocol_decode_status() -> None:
     assert PearyProtocol.decode(b"\x00\x00\x00\x04\x00\x00\x00\x01").status == 1
 
 
-# TODO(Jeff): increase the number of bytes until it passes
 def test_peary_protocol_decode_insufficient_number_number_of_bytes() -> None:
     with pytest.raises(
         PearyProtocol.DecodeError, match="Insufficent number of bytes: 0"
@@ -41,6 +40,14 @@ def test_peary_protocol_decode_insufficient_number_number_of_bytes() -> None:
         PearyProtocol.DecodeError, match="Insufficent number of bytes: 3"
     ):
         PearyProtocol.decode(b"...")
+
+
+def test_peary_protocol_decode_insufficient_number_number_of_bytes_sweep() -> None:
+    for ii in range(PearyProtocol.STRUCT_LENGTH.size):
+        with pytest.raises(
+            PearyProtocol.DecodeError, match=f"Insufficent number of bytes: {ii}"
+        ):
+            PearyProtocol.decode(bytes(ii))
 
 
 def test_peary_protocol_decode_incorrect_number_of_bytes() -> None:

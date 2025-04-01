@@ -1,16 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import socket as socket_module
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-
-def test_peary_device_init_index(device: Callable) -> None:
-    assert device(0).index == 0
-    assert device(1).index == 1
+from peary.peary_device import PearyDevice
+from peary.peary_protocol import PearyProtocol
 
 
-def test_peary_device_init_name(device: Callable) -> None:
-    assert device(0).name == "device.name 0"
-    assert device(1).name == "device.name 1"
+def test_peary_device_init_index() -> None:
+    protocol = PearyProtocol(
+        socket_module.socket(), checks=PearyProtocol.Checks.CHECK_NONE
+    )
+    assert PearyDevice(0, protocol).index == 0
+    assert PearyDevice(1, protocol).index == 1
+
+
+def test_peary_device_init_name() -> None:
+    protocol = PearyProtocol(
+        socket_module.socket(), checks=PearyProtocol.Checks.CHECK_NONE
+    )
+    assert PearyDevice(0, protocol).protocol is protocol

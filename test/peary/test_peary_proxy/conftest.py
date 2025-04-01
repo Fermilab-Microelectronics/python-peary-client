@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-import socket
+import socket as socket_module
 from typing import TYPE_CHECKING
 
 import pytest
 
-from peary.peary_device import PearyDevice
 from peary.peary_protocol import PearyProtocol
+from peary.peary_proxy import PearyProxy
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-@pytest.fixture(name="mock_device")
-def _mock_device() -> Callable:
-    def _customize_mock_device_request(
-        index: int, *, req: str | None = None, resp: bytes | None = None
-    ) -> PearyDevice:
+@pytest.fixture(name="mock_proxy")
+def _mock_proxy() -> Callable:
+    def _customize_mock_proxy_request(
+        *, req: str | None = None, resp: bytes | None = None
+    ) -> PearyProxy:
 
         class MockPearyProtocol(PearyProtocol):
             """A Mock Peary Protocol."""
@@ -31,9 +31,10 @@ def _mock_device() -> Callable:
                 else:
                     return " ".join([msg, *args]).encode("utf-8")
 
-        return PearyDevice(
-            index,
-            MockPearyProtocol(socket.socket(), checks=PearyProtocol.Checks.CHECK_NONE),
+        return PearyProxy(
+            MockPearyProtocol(
+                socket_module.socket(), checks=PearyProtocol.Checks.CHECK_NONE
+            )
         )
 
-    return _customize_mock_device_request
+    return _customize_mock_proxy_request

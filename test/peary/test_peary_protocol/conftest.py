@@ -1,31 +1,55 @@
 from __future__ import annotations
 
+import select
 import socket as socket_module
-from typing import TYPE_CHECKING
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+    from socket import socket as socket_type
+
     from typing_extensions import Buffer
 
 
-class MockSocket(socket_module.socket):
-    timeout = None
-
-    # pylint: disable-next=W0613
-    def recv(self, size: int, flags: int = 0) -> bytes:  # noqa: ARG002
-        return PearyProtocol.encode(b"", 1, PearyProtocol.STATUS_OK)
-
-    # pylint: disable-next=W0613
-    def send(self, data: Buffer, flags: int = 0) -> int:  # noqa: ARG002
-        return len(bytes(data))
-
-    def settimeout(self, value: float | None = None) -> None:
-        MockSocket.timeout = value
+class MockSocketInterface(socket_module.socket):
+    timeout: float | None = None
 
 
-@pytest.fixture(name="mock_socket")
-def _mock_socket() -> type[socket_module.socket]:
-    return MockSocket
+@pytest.fixture(name="socket_class_context")
+def _socket_class_context(monkeypatch: pytest.MonkeyPatch) -> Callable:
+
+    @contextmanager
+    def _socket_class_contextmanager(
+        # pylint: disable-next=unnecessary-lambda
+        mock_send: Callable[[bytes], int] = lambda _: len(_),
+        mock_recv: Callable[[int], bytes] = lambda _: PearyProtocol.encode(
+            b"", 1, PearyProtocol.STATUS_OK
+        ),
+        mock_select: Callable[
+            [list[socket_type]], tuple[list, list, list]
+        ] = lambda *_: ([], [], []),
+    ) -> Generator[type[MockSocketInterface]]:
+
+        class MockSocket(MockSocketInterface):
+
+            # pylint: disable-next=W0613
+            def send(self, data: Buffer, flags: int = 0) -> int:  # noqa: ARG002
+                return mock_send(cast("bytes", data))
+
+            # pylint: disable-next=W0613
+            def recv(self, size: int, flags: int = 0) -> bytes:  # noqa: ARG002
+                return mock_recv(size)
+
+            def settimeout(self, value: float | None = None) -> None:
+                MockSocket.timeout = value
+
+        with monkeypatch.context() as m:
+            m.setattr(select, "select", mock_select)
+            yield MockSocket
+
+    return _socket_class_contextmanager

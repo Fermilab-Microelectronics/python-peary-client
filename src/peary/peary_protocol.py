@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import select
 import struct
+from enum import Flag, auto
 from typing import TYPE_CHECKING, NamedTuple
-
-from peary.peary_protocol_interface import PearyProtocolInterface
 
 if TYPE_CHECKING:
     from socket import socket as socket_type
@@ -18,7 +17,7 @@ class DecodedBytes(NamedTuple):
     status: int
 
 
-class PearyProtocol(PearyProtocolInterface):
+class PearyProtocol:
     """Protocol for encoding and decoding communication with a remote peary server."""
 
     class DecodeError(Exception):
@@ -36,30 +35,44 @@ class PearyProtocol(PearyProtocolInterface):
     class RequestSendError(Exception):
         """Exception for requests failing to send."""
 
-    class IncompatibleProtocolError(Exception):
+    class VersionError(Exception):
         """Exception for incompatible client and server protocols."""
+
+    class Checks(Flag):
+        """Collection of protocol checks that can be performed."""
+
+        CHECK_NONE = auto()
+        CHECK_VERSION = auto()
 
     STATUS_OK = 0
     STRUCT_HEADER = struct.Struct("!HH")
     STRUCT_LENGTH = struct.Struct("!L")
     VERSION = b"1"
 
-    def __init__(self, socket: socket_type, timeout: int = 1) -> None:
+    def __init__(
+        self,
+        socket: socket_type,
+        *,
+        timeout: int = 1,
+        checks: Checks = Checks.CHECK_VERSION,
+    ) -> None:
         """Initializes a new peary proxy.
 
         Args:
             socket: Socket connected to the remote peary server.
             timeout: Socket timeout value in seconds. Defaults to 1.
+            checks: Checks performed during initialization. Defaults to CHECK_VERSION.
 
         Raises:
-            IncompatibleProtocolError: If protocol version numbers do not match
+            VersionError: If protocol version doesn match with remote host.
 
         """
         self._tag: int = 0
         self._socket = socket
 
         self._socket.settimeout(timeout)
-        self._verify_compatible_version()
+        if PearyProtocol.Checks.CHECK_VERSION in checks:
+            self._verify_compatible_version()
 
     @staticmethod
     def encode(payload: bytes, tag: int, status: int) -> bytes:
@@ -190,10 +203,10 @@ class PearyProtocol(PearyProtocolInterface):
         """Verify the remote version is suppoted by this protocol.
 
         Raises:
-            IncompatibleProtocolError: If versions are incompatible.
+            VersionError: If versions are incompatible.
 
         """
         if (version := self.request("protocol_version")) != self.VERSION:
-            raise PearyProtocol.IncompatibleProtocolError(
+            raise PearyProtocol.VersionError(
                 f"Unsupported protocol version: {version!r}"
             )

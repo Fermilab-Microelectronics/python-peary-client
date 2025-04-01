@@ -5,25 +5,20 @@ from typing import TYPE_CHECKING
 from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from .conftest import MockSocket
+    from collections.abc import Callable
 
 
-class VerifiedPearyProtocol(PearyProtocol):
-    """An extended PearyProtocol that bypasses compatibility checks."""
-
-    def _verify_compatible_version(self) -> None:
-        pass
-
-
-def test_peary_protocol_init_timeout_default(mock_socket: type[MockSocket]) -> None:
-    mock_socket().settimeout(None)
-    assert mock_socket.timeout is None
-    VerifiedPearyProtocol(mock_socket())
-    assert mock_socket.timeout == 1
+def test_peary_protocol_init_timeout_default(socket_class_context: Callable) -> None:
+    with socket_class_context() as socket_class:
+        socket_class.timeout = None
+        PearyProtocol(socket_class(), checks=PearyProtocol.Checks.CHECK_NONE)
+        assert socket_class.timeout == 1
 
 
-def test_peary_protocol_init_timeout_nondefault(mock_socket: type[MockSocket]) -> None:
-    mock_socket().settimeout(None)
-    assert mock_socket.timeout is None
-    VerifiedPearyProtocol(mock_socket(), timeout=100)
-    assert mock_socket.timeout == 100
+def test_peary_protocol_init_timeout_nondefault(socket_class_context: Callable) -> None:
+    with socket_class_context() as socket_class:
+        socket_class.timeout = None
+        PearyProtocol(
+            socket_class(), timeout=100, checks=PearyProtocol.Checks.CHECK_NONE
+        )
+        assert socket_class.timeout == 100

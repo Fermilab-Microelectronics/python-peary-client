@@ -1,22 +1,12 @@
 from __future__ import annotations
 
-import socket
+from typing import TYPE_CHECKING
 
 from caribou.caribou_board import CaribouBoard
 from caribou.power_supply import PowerSupply
-from peary.peary_protocol import PearyProtocol
 
-
-class MockProtocol(PearyProtocol):
-    """A Mock Peary Protocol."""
-
-    def request(
-        self, msg: str, *args: str, buffer_size: int = 4096  # noqa: ARG002
-    ) -> bytes:
-        return " ".join([msg, *args]).encode("utf-8")
-
-    def _verify_compatible_version(self) -> None:
-        pass
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def test_caribou_board_power_supply_constants() -> None:
@@ -30,8 +20,8 @@ def test_caribou_board_power_supply_constants() -> None:
     assert CaribouBoard.PWR_OUT_8.value == "PWR_OUT_8"
 
 
-def test_caribou_board_power_supply_type() -> None:
-    caribou_board = CaribouBoard(0, socket.socket(), MockProtocol)
+def test_caribou_board_power_supply_type(mock_caribou_board: Callable) -> None:
+    caribou_board = mock_caribou_board(0)
     assert isinstance(caribou_board.power_supply(CaribouBoard.PWR_OUT_1), PowerSupply)
     assert isinstance(caribou_board.power_supply(CaribouBoard.PWR_OUT_2), PowerSupply)
     assert isinstance(caribou_board.power_supply(CaribouBoard.PWR_OUT_3), PowerSupply)
@@ -42,8 +32,8 @@ def test_caribou_board_power_supply_type() -> None:
     assert isinstance(caribou_board.power_supply(CaribouBoard.PWR_OUT_8), PowerSupply)
 
 
-def test_caribou_board_power_supply_names() -> None:
-    caribou_board = CaribouBoard(0, socket.socket(), MockProtocol)
+def test_caribou_board_power_supply_names(mock_caribou_board: Callable) -> None:
+    caribou_board = mock_caribou_board(0)
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_1).name == "PWR_OUT_1"
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_2).name == "PWR_OUT_2"
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_3).name == "PWR_OUT_3"
@@ -54,8 +44,8 @@ def test_caribou_board_power_supply_names() -> None:
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_8).name == "PWR_OUT_8"
 
 
-def test_caribou_board_power_supply_devices() -> None:
-    caribou_board = CaribouBoard(0, socket.socket(), MockProtocol)
+def test_caribou_board_power_supply_devices(mock_caribou_board: Callable) -> None:
+    caribou_board = mock_caribou_board(0)
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_1).device is caribou_board
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_2).device is caribou_board
     assert caribou_board.power_supply(CaribouBoard.PWR_OUT_3).device is caribou_board
