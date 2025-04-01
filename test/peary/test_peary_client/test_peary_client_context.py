@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import socket as socket_module
+from typing import TYPE_CHECKING
 
 import pytest
 
 from peary.peary_client import PearyClient
-from peary.peary_protocol import PearyProtocol
 from peary.peary_proxy import PearyProxy
+
+if TYPE_CHECKING:
+    from .conftest import MockSocket
 
 
 def test_peary_client_context_manager_executes_body(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     with PearyClient("", socket_class=mock_socket_class):
         test_result = True
@@ -18,30 +21,28 @@ def test_peary_client_context_manager_executes_body(
 
 
 def test_peary_client_context_manager_returns_proxy_class(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     with PearyClient("", socket_class=mock_socket_class) as client:
         assert isinstance(client, PearyProxy)
 
 
 def test_peary_client_context_manager_enter_socket_connect_success(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     mock_socket_class.is_connected = None
     with PearyClient("", socket_class=mock_socket_class):
         assert mock_socket_class.is_connected is True
 
 
-def test_peary_client_context_manager_enter_socket_connect_error(
-    mock_socket_class: socket_module.socket,
-) -> None:
+def test_peary_client_context_manager_enter_socket_connect_error() -> None:
     with pytest.raises(PearyClient.PearySockerError) as e, PearyClient("-", 0):
         pass  # pragma: no cover
     assert "Unable to connect to host - using port 0." in str(e)
 
 
 def test_peary_client_context_manager_enter_socket_address_default_port(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     mock_socket_class.address = None
     with PearyClient("alpha", socket_class=mock_socket_class):
@@ -51,7 +52,7 @@ def test_peary_client_context_manager_enter_socket_address_default_port(
 
 
 def test_peary_client_context_manager_enter_socket_address_nondefault_port(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     mock_socket_class.address = None
     with PearyClient(host="", port=0, socket_class=mock_socket_class):
@@ -61,7 +62,7 @@ def test_peary_client_context_manager_enter_socket_address_nondefault_port(
 
 
 def test_peary_client_context_manager_exit_socket_shutdown(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     mock_socket_class.is_shutdown = None
     mock_socket_class.how_shutdown = None
@@ -72,7 +73,7 @@ def test_peary_client_context_manager_exit_socket_shutdown(
 
 
 def test_peary_client_context_manager_exit_socket_closes(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     mock_socket_class.is_connected = None
     with PearyClient("", socket_class=mock_socket_class):
@@ -81,7 +82,7 @@ def test_peary_client_context_manager_exit_socket_closes(
 
 
 def test_peary_client_context_manager_enter_socket_exit_gracefully(
-    mock_socket_class: socket_module.socket,
+    mock_socket_class: type[MockSocket],
 ) -> None:
     class MockError(Exception):
         """Mock exception for testing purposes."""

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-import socket as socket_module
+from typing import TYPE_CHECKING
 
 from peary.peary_client import PearyClient
 from peary.peary_protocol import PearyProtocol
 
+if TYPE_CHECKING:
+    import socket as socket_module
 
-def test_peary_client_protocol_class(mock_socket_class: socket_module.socket) -> None:
+
+def test_peary_client_protocol_class(
+    mock_socket_class: type[socket_module.socket],
+) -> None:
     request_collection = []
 
     class MockProtocol(PearyProtocol):

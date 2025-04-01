@@ -5,9 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from peary.peary_client import PearyClient
 from peary.peary_protocol import PearyProtocol
-from peary.peary_proxy import PearyProxy
 
 if TYPE_CHECKING:
     from typing import Any
@@ -65,5 +63,5 @@ class MockSocket(socket_module.socket):
 
 
 @pytest.fixture(name="mock_socket_class")
-def _mock_socket_class() -> socket_module.socket:
+def _mock_socket_class() -> type[MockSocket]:
     return MockSocket
