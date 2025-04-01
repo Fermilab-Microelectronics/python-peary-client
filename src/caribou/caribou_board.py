@@ -7,12 +7,9 @@ from caribou.current_bias import CurrentBias
 from caribou.power_supply import PowerSupply
 from caribou.voltage_bias import VoltageBias
 from peary.peary_device import PearyDevice
-from peary.peary_protocol import PearyProtocol
 
 if TYPE_CHECKING:
-    from socket import socket as socket_type
-
-    from peary.peary_protocol_interface import PearyProtocolInterface
+    from peary.peary_protocol import PearyProtocol
 
 
 class CaribouBoard(PearyDevice):
@@ -110,21 +107,15 @@ class CaribouBoard(PearyDevice):
     IBIAS_7 = CurrentBiasName.CUR_7
     IBIAS_8 = CurrentBiasName.CUR_8
 
-    def __init__(
-        self,
-        index: int,
-        socket: socket_type,
-        protocol_class: type[PearyProtocolInterface] = PearyProtocol,
-    ) -> None:
+    def __init__(self, index: int, protocol: PearyProtocol) -> None:
         """Initializes a caribou board as a remote peary device.
 
         Args:
-            socket: Socket connected to the remote peary server.
-            protocol_class: Protocol used during communication with the peary server.
             index: Numerical identifier for the device.
+            protocol: Protocol connected to the remote peary server.
 
         """
-        super().__init__(index, socket, protocol_class)
+        super().__init__(index, protocol)
         self._power_supply_collection = {
             s: PowerSupply(s.value, self) for s in CaribouBoard.PowerSupplyName
         }
