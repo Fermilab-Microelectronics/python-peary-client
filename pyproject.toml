@@ -5,9 +5,7 @@ requires = [
 ]
 
 [project]
-dependencies = [
-    "labtest @ git+https://github.com/ic-designer/python-labtest.git#main",
-]
+dependencies = []
 description = "Python code used for testing the SUNROCK chip."
 name = "peary-client"
 readme = "README.md"
