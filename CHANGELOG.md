@@ -44,4 +44,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added missing command line option to isolate python in github workflow:
   `python -m pip install --upgrade pip` -> `python -Im pip install --upgrade pip`
 - Rewrote the class tests to use derived classes instead of monkeypatching everything.
+- Removed unused `python-labtest` dependency.
 ### Security
