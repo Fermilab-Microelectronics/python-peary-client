@@ -17,7 +17,7 @@ class CaribouBoard(PearyDevice):
 
     Example of usage:
 
-        func test_setup(vdda=1.2, vddd=1.0, vddio=1.8. vbias=0.4, ibias=0.001):
+        def test_setup(vdda=1.2, vddd=1.0, vddio=1.8. vbias=0.4, ibias=0.001):
             device_carboard = client.add_device("SpacelyCaribouBasic", CaribouBoard)
 
             supply_vdda = device_carboard.power_supply(CaribouBoard.PWR_OUT_1)
